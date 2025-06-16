@@ -2,27 +2,19 @@
 set -e
 
 echo "Checking database directory..."
-mkdir -p /app/instance
-chmod 777 /app/instance
+if [ ! -d "/app/instance" ]; then
+    echo "Creating instance directory..."
+    mkdir -p /app/instance
+    chmod 777 /app/instance
+fi
 
-echo "Waiting for database directory to be ready..."
-until [ -w /app/instance ]; do
-    echo "Waiting for write permissions..."
-    sleep 1
-done
-
-echo "Initializing database..."
-python <<EOF
-from app.src import create_app, db
-app = create_app()
-with app.app_context():
-    try:
-        db.create_all()
-        print("Database initialized successfully")
-    except Exception as e:
-        print(f"Error initializing database: {e}")
-        exit(1)
-EOF
+echo "Using existing database..."
+if [ -f "/app/instance/inventory.db" ]; then
+    echo "Database exists, skipping initialization"
+else
+    echo "Database not found, this should not happen in production!"
+    exit 1
+fi
 
 echo "Starting Gunicorn..."
 exec gunicorn \

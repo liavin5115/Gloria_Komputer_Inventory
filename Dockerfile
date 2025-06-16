@@ -29,14 +29,15 @@ RUN pip install --no-cache-dir -r requirements.txt \
 
 # Create app directory and set permissions
 RUN mkdir -p /app/instance && \
-    chmod -R 777 /app/instance && \
-    chown -R nobody:nobody /app/instance
+    chown -R nobody:nogroup /app && \
+    chmod -R 777 /app/instance
 
-# Copy application files except instance directory
+# Copy application files
 COPY --chown=nobody:nobody . .
 
-# Ensure database directory remains writable
-VOLUME ["/app/instance"]
+# Set execute permissions for scripts
+RUN chmod +x /app/start.sh && \
+    chmod +x /app/docker-healthcheck.py
 
 # Switch to non-root user
 USER nobody

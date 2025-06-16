@@ -6,25 +6,16 @@ services:
     container_name: gloria_komputer_inventory
     ports:
       - "5000:5000"
-    volumes:
-      - db_data:/app/instance
     environment:
       - FLASK_APP=run.py
       - FLASK_ENV=production
       - PYTHONUNBUFFERED=1
-      - INSTANCE_PATH=/app/instance
-    user: "1000:1000"  # Set user to match host permissions
+      - INSTANCE_PATH=/data/instance
+    volumes:
+      - /data/instance:/app/instance
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "docker-healthcheck.py"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-volumes:
-  db_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${PWD}/instance  # Bind to local instance directory
