@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="section-header mb-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="section-title">Inventory Management</h2>
+            <p class="text-muted mb-0">Manage your product inventory, stock levels, and categories</p>
+        </div>
+        <div>
+            <a href="{{ url_for('main.add_inventory') }}" class="btn btn-primary hover-lift">
+                <i class="bi bi-plus-lg me-2"></i>Add New Item
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Section -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Category</label>
+                <select id="categoryFilter" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Stock Level</label>
+                <select id="stockFilter" class="form-select">
+                    <option value="">All Levels</option>
+                    <option value="low">Low Stock (≤5)</option>
+                    <option value="out">Out of Stock</option>
+                    <option value="available">In Stock</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Price Range</label>
+                <select id="priceFilter" class="form-select">
+                    <option value="">All Prices</option>
+                    <option value="0-1000000">Under 1M</option>
+                    <option value="1000000-5000000">1M - 5M</option>
+                    <option value="5000000-10000000">5M - 10M</option>
+                    <option value="10000000-999999999">Above 10M</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button id="resetFilters" class="btn btn-secondary">
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card hover-shadow fade-in">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table id="inventoryTable" class="table table-hover align-middle mb-0 w-100">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in inventory_items %}
+                    <tr>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.category }}</td>
+                        <td>{{ item.description }}</td>
+                        <td data-order="{{ item.quantity }}">
+                            <span class="badge {% if item.quantity <= 0 %}bg-danger{% elif item.quantity <= 5 %}bg-warning{% else %}bg-success{% endif %}">
+                                {{ item.quantity }}
+                            </span>
+                        </td>
+                        <td data-order="{{ item.price }}">Rp. {{ "{:,.2f}".format(item.price) }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{{ url_for('main.edit_inventory', id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-warning" onclick="showOutStockModal({{ item.id }}, '{{ item.product_name }}', {{ item.quantity }})">
+                                    <i class="bi bi-box-arrow-down"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteItem({{ item.id }})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Out Stock Modal -->
+<div class="modal fade" id="outStockModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Stock Out - <span id="productName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="outStockForm">
+                    <input type="hidden" id="itemId" name="itemId">
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
+                        <div class="form-text">Current stock: <span id="currentStock"></span></div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reference" class="form-label">Reference</label>
+                        <input type="text" class="form-control" id="reference" name="reference" 
+                               placeholder="e.g., Sales Invoice #, Customer Name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="2"
+                                 placeholder="Additional notes about this stock out"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitOutStock()">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Initialize DataTable with configuration
+    var table = $('#inventoryTable').DataTable({
+        processing: true,
+        pageLength: 10,
+        dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>rtip',
+        buttons: [
+            {
+                extend: 'collection',
+                text: '<i class="bi bi-download me-2"></i>Export',
+                className: 'btn btn-primary',
+                buttons: [
+                    {
+                        extend: 'copy',
+                        text: '<i class="bi bi-clipboard me-2"></i>Copy',
+                        className: 'btn btn-light'
+                    },
+                    {
+                        extend: 'excel',
+                        text: '<i class="bi bi-file-earmark-excel me-2"></i>Excel',
+                        className: 'btn btn-success'
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="bi bi-file-earmark-pdf me-2"></i>PDF',
+                        className: 'btn btn-danger'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="bi bi-printer me-2"></i>Print',
+                        className: 'btn btn-info'
+                    }
+                ]
+            }
+        ],
+        order: [[0, 'asc']],
+        responsive: true,
+        language: {
+            search: "Search:",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            }
+        }
+    });
+
+    // Custom Filters
+    $('#categoryFilter').on('change', function() {
+        table.column(1).search(this.value).draw();
+    });
+
+    $('#stockFilter').on('change', function() {
+        let val = this.value;
+        $.fn.dataTable.ext.search.pop(); // Remove previous stock filter
+
+        if (val) {
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                let quantity = parseInt($(data[3]).text());
+                switch(val) {
+                    case 'low':
+                        return quantity <= 5 && quantity > 0;
+                    case 'out':
+                        return quantity <= 0;
+                    case 'available':
+                        return quantity > 0;
+                    default:
+                        return true;
+                }
+            });
+        }
+        table.draw();
+    });
+
+    $('#priceFilter').on('change', function() {
+        let val = this.value;
+        $.fn.dataTable.ext.search.pop(); // Remove previous price filter
+
+        if (val) {
+            let [min, max] = val.split('-').map(Number);
+            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                let price = parseFloat(data[4].replace(/[^\d.-]/g, ''));
+                return (isNaN(min) || price >= min) && (isNaN(max) || price <= max);
+            });
+        }
+        table.draw();
+    });
+
+    // Reset all filters
+    $('#resetFilters').on('click', function() {
+        $('#categoryFilter, #stockFilter, #priceFilter').val('');
+        $.fn.dataTable.ext.search.pop();
+        table.search('').columns().search('').draw();
+    });
+});
+
+function deleteItem(id) {
+    if (confirm('Are you sure you want to delete this item?')) {
+        fetch(`/inventory/${id}`, {
+            method: 'DELETE',
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            }
+        });
+    }
+}
+
+function showOutStockModal(id, productName, currentQty) {
+    document.getElementById('itemId').value = id;
+    document.getElementById('productName').textContent = productName;
+    document.getElementById('currentStock').textContent = currentQty;
+    document.getElementById('quantity').max = currentQty;
+    
+    // Reset form
+    document.getElementById('outStockForm').reset();
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('outStockModal')).show();
+}
+
+function submitOutStock() {
+    const form = document.getElementById('outStockForm');
+    const itemId = document.getElementById('itemId').value;
+    const quantity = document.getElementById('quantity').value;
+    const reference = document.getElementById('reference').value;
+    const notes = document.getElementById('notes').value;
+
+    if (!quantity || quantity <= 0) {
+        alert('Please enter a valid quantity');
+        return;
+    }
+
+    fetch(`/inventory/${itemId}/stock-out`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            quantity: parseInt(quantity),
+            reference: reference,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert(data.error);
+        } else {
+            window.location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing the request');
+    });
+}
+</script>
+{% endblock %}

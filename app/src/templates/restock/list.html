@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="section-header mb-4">
+    <div>
+        <h2 class="section-title">Restock Management</h2>
+        <p class="text-muted mb-0">Track and manage incoming inventory restocks</p>
+    </div>
+    <div>
+        <a href="{{ url_for('restock.add_restock') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Add New Restock
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <i class="bi bi-hourglass-split display-4 text-warning mb-3"></i>
+                <h5 class="card-title">Pending Restocks</h5>
+                <p class="stat-value text-warning">{{ pending_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <i class="bi bi-calendar-event display-4 text-primary mb-3"></i>
+                <h5 class="card-title">Due Today</h5>
+                <p class="stat-value text-primary">{{ due_today_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stat-card">
+            <div class="card-body">
+                <i class="bi bi-check-circle display-4 text-success mb-3"></i>
+                <h5 class="card-title">Completed This Month</h5>
+                <p class="stat-value text-success">{{ completed_count }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <ul class="nav nav-tabs card-header-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#pending" data-bs-toggle="tab">
+                    <i class="bi bi-hourglass-split"></i> Pending
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#completed" data-bs-toggle="tab">
+                    <i class="bi bi-check-circle"></i> Completed
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#cancelled" data-bs-toggle="tab">
+                    <i class="bi bi-x-circle"></i> Cancelled
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body">
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="pending">
+                <div class="table-responsive">
+                    <table id="pendingTable" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Supplier</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Expected Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in pending_items %}  {# Change from restock_items to pending_items #}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ item.product_name }}</div>
+                                    <small class="text-muted">{{ item.description[:50] + '...' if item.description and item.description|length > 50 else item.description }}</small>
+                                </td>
+                                <td>{{ item.supplier }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>Rp. {{ "{:,.2f}".format(item.price) }}</td>
+                                <td>
+                                    {% set days_until = (item.expected_date - today).days %}
+                                    {{ item.expected_date.strftime('%Y-%m-%d') }} WIB
+                                    {% if days_until < 0 %}
+                                        <span class="badge bg-danger">Overdue</span>
+                                    {% elif days_until == 0 %}
+                                        <span class="badge bg-warning text-dark">Due Today</span>
+                                    {% elif days_until <= 7 %}
+                                        <span class="badge bg-info">Due in {{ days_until }} days</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge {% if item.status == 'pending' %}badge-pending{% elif item.status == 'received' %}badge-success{% else %}bg-secondary{% endif %}">
+                                        {{ item.status|title }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group-actions">
+                                        <form method="POST" action="{{ url_for('restock.receive_restock', id=item.id) }}" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-success">
+                                                <i class="bi bi-check-lg"></i> Receive
+                                            </button>
+                                        </form>
+                                        <button class="btn btn-sm btn-danger" onclick="cancelRestock({{ item.id }})">
+                                            <i class="bi bi-x-lg"></i> Cancel
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="tab-pane fade" id="completed">
+                <div class="table-responsive">
+                    <table id="completedTable" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Supplier</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Received Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in completed_items %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ item.product_name }}</div>
+                                    <small class="text-muted">{{ item.description[:50] + '...' if item.description and item.description|length > 50 else item.description }}</small>
+                                </td>
+                                <td>{{ item.supplier }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>Rp. {{ "{:,.2f}".format(item.price) }}</td>
+                                <td>{{ item.updated_at.strftime('%Y-%m-%d') }} WIB</td>
+                                <td>
+                                    <span class="badge bg-success">Received</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="tab-pane fade" id="cancelled">
+                <div class="table-responsive">
+                    <table id="cancelledTable" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Supplier</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Cancelled Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in cancelled_items %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold">{{ item.product_name }}</div>
+                                    <small class="text-muted">{{ item.description[:50] + '...' if item.description and item.description|length > 50 else item.description }}</small>
+                                </td>
+                                <td>{{ item.supplier }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>Rp. {{ "{:,.2f}".format(item.price) }}</td>
+                                <td>{{ item.updated_at.strftime('%Y-%m-%d') }} WIB</td>
+                                <td>
+                                    <span class="badge bg-secondary">Cancelled</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Initialize DataTables
+    $('#pendingTable').DataTable({
+        dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>rtip',
+        buttons: [
+            {
+                extend: 'collection',
+                text: '<i class="bi bi-download me-2"></i>Export',
+                className: 'btn btn-primary',
+                buttons: [
+                    {
+                        extend: 'copy',
+                        text: '<i class="bi bi-clipboard me-2"></i>Copy',
+                        className: 'btn btn-light'
+                    },
+                    {
+                        extend: 'excel',
+                        text: '<i class="bi bi-file-earmark-excel me-2"></i>Excel',
+                        className: 'btn btn-success'
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="bi bi-file-earmark-pdf me-2"></i>PDF',
+                        className: 'btn btn-danger'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="bi bi-printer me-2"></i>Print',
+                        className: 'btn btn-info'
+                    }
+                ]
+            }
+        ],
+        order: [[4, 'asc']], // Sort by Expected Date
+        pageLength: 10,
+        language: {
+            search: "Search:",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            }
+        }
+    });
+
+    $('#completedTable').DataTable({
+        dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>rtip',
+        buttons: [
+            {
+                extend: 'collection',
+                text: '<i class="bi bi-download me-2"></i>Export',
+                className: 'btn btn-primary',
+                buttons: ['copy', 'excel', 'pdf', 'print']
+            }
+        ],
+        order: [[4, 'desc']], // Sort by Received Date
+        pageLength: 10
+    });
+
+    $('#cancelledTable').DataTable({
+        dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>rtip',
+        buttons: [
+            {
+                extend: 'collection',
+                text: '<i class="bi bi-download me-2"></i>Export',
+                className: 'btn btn-primary',
+                buttons: ['copy', 'excel', 'pdf', 'print']
+            }
+        ],
+        order: [[4, 'desc']], // Sort by Cancelled Date
+        pageLength: 10
+    });
+
+    // Re-initialize DataTable when switching tabs
+    $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+        $.fn.dataTable.tables({ visible: true, api: true }).columns.adjust();
+    });
+});
+
+function cancelRestock(id) {
+    if (confirm('Are you sure you want to cancel this restock?')) {
+        fetch(`/restock/${id}/cancel`, {
+            method: 'POST',
+        }).then(response => {
+            if (response.ok) {
+                window.location.reload();
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
