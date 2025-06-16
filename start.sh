@@ -2,8 +2,11 @@
 set -e
 
 echo "Checking database directory..."
-mkdir -p /app/instance
-chmod 777 /app/instance
+DB_DIR=${DATABASE_PATH:-/data/instance}
+DB_DIR=$(dirname "$DB_DIR")
+
+mkdir -p "$DB_DIR"
+chmod 777 "$DB_DIR"
 
 echo "Initializing database..."
 python <<EOF
@@ -52,4 +55,5 @@ exec gunicorn \
     --access-logfile - \
     --error-logfile - \
     --log-level info \
+    --env DATABASE_PATH="$DB_DIR/inventory.db" \
     "run:app"

@@ -26,22 +26,20 @@ def create_app():
     # Configuration
     app.config['SECRET_KEY'] = 'your-secret-key'
     
-    # Set database path - ensure it's absolute and in the instance folder
-    instance_path = os.environ.get('INSTANCE_PATH', '/app/instance')
-    os.makedirs(instance_path, exist_ok=True)
+    # Database path handling
+    db_path = os.getenv('DATABASE_PATH', '/data/instance/inventory.db')
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
     
-    db_path = os.path.join(instance_path, 'inventory.db')
+    print(f"Using database at: {db_path}")
+    print(f"Database exists: {os.path.exists(db_path)}")
+    print(f"Database directory writable: {os.access(os.path.dirname(db_path), os.W_OK)}")
+    
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    print(f"Database path: {db_path}")
-    print(f"Instance path: {instance_path}")
-    print(f"Current working directory: {os.getcwd()}")
-    print(f"Directory contents: {os.listdir(instance_path)}")
-    
-    # Initialize database
     db.init_app(app)
     
+    # Import and register blueprints
     with app.app_context():
         try:
             db.create_all()
