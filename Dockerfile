@@ -33,16 +33,13 @@ COPY . .
 RUN mkdir -p /app/instance \
     && chmod 777 /app/instance
 
-# Copy healthcheck script
-COPY docker-healthcheck.py /usr/local/bin/docker-healthcheck
-RUN chmod +x /usr/local/bin/docker-healthcheck
+# Copy startup script and make it executable
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
 # Healthcheck configuration
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD ["python", "/usr/local/bin/docker-healthcheck"]
+    CMD python docker-healthcheck.py
 
-# Run with gunicorn
-CMD ["gunicorn", "--workers", "$GUNICORN_WORKERS", "--threads", "$GUNICORN_THREADS", \
-     "--timeout", "$GUNICORN_TIMEOUT", "--bind", "$GUNICORN_BIND", \
-     "--access-logfile", "-", "--error-logfile", "-", \
-     "--log-level", "info", "run:create_app()"]
+# Run with startup script
+CMD ["/start.sh"]
