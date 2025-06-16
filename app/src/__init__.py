@@ -26,28 +26,43 @@ def create_app():
     # Configuration
     app.config['SECRET_KEY'] = 'your-secret-key'
     
-    # Set up the SQLite database
-    basedir = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-    instance_path = os.path.join(basedir, 'instance')
-    if not os.path.exists(instance_path):
-        os.makedirs(instance_path)
-    
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(instance_path, "inventory.db")}'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-    # Initialize extensions
-    db.init_app(app)
-
-    with app.app_context():
+    # Ensure instance folder exists
+    try:
+        instance_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'instance')
+        os.makedirs(instance_path, exist_ok=True)
+        
+        # Set database path and ensure it's absolute
+        db_path = os.path.join(instance_path, 'inventory.db')
+        app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        
+        print(f"Database path: {db_path}")  # Debug print
+        
+        # Initialize extensions
+        db.init_app(app)
+        
+        with app.app_context():
+            # Import models to ensure they're registered
+            from .models.inventory import Inventory
+            from .models.restock import Restock
+            from .models.stock_history import StockHistory
+            
+            # Create database tables
+            try:
+                db.create_all()
+                print("Database tables created successfully")
+            except Exception as e:
+                print(f"Error creating database tables: {e}")
+                raise
+        
         # Register blueprints
-        from .routes import main as main_blueprint
-        from .routes import restock as restock_blueprint
-        from .routes import history as history_blueprint
-        app.register_blueprint(main_blueprint)
-        app.register_blueprint(restock_blueprint)
-        app.register_blueprint(history_blueprint)
-
-        # Create database tables
-        db.create_all()
-
+        from .routes import main, restock, history
+        app.register_blueprint(main)
+        app.register_blueprint(restock)
+        app.register_blueprint(history)
+        
+    except Exception as e:
+        print(f"Error during app initialization: {e}")
+        raise
+    
     return app
