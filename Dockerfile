@@ -19,6 +19,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
     gcc \
     curl \
+    sqlite3 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
@@ -26,16 +27,22 @@ COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
     && pip install gunicorn
 
-# Copy project
+# Create app directory and set permissions
+RUN mkdir -p /app/instance && \
+    chmod -R 777 /app/instance
+
+# Copy project files
 COPY . .
 
-# Create volume directory
-RUN mkdir -p /app/instance \
-    && chmod 777 /app/instance
+# Set execute permissions for scripts
+RUN chmod +x start.sh docker-healthcheck.py && \
+    chmod -R 777 /app/instance
 
-# Copy startup script and make it executable
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
+# Remove root ownership
+RUN chown -R nobody:nogroup /app
+
+# Switch to non-root user
+USER nobody
 
 # Healthcheck configuration
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
