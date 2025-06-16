@@ -27,18 +27,16 @@ COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
     && pip install gunicorn
 
-# Create and set permissions for instance directory
+# Create app directory and set permissions
 RUN mkdir -p /app/instance && \
-    chown -R nobody:nogroup /app/instance && \
-    chmod 777 /app/instance
+    chmod -R 777 /app/instance && \
+    chown -R nobody:nobody /app/instance
 
-# Copy application files
-COPY . .
+# Copy application files except instance directory
+COPY --chown=nobody:nobody . .
 
-# Set permissions for the entire app
-RUN chown -R nobody:nogroup /app && \
-    chmod +x /app/start.sh && \
-    chmod +x /app/docker-healthcheck.py
+# Ensure database directory remains writable
+VOLUME ["/app/instance"]
 
 # Switch to non-root user
 USER nobody
