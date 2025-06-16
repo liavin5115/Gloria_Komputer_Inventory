@@ -34,8 +34,9 @@ RUN mkdir -p /app/instance && \
 # Copy project files
 COPY . .
 
-# Set execute permissions for scripts
-RUN chmod +x start.sh docker-healthcheck.py && \
+# Copy startup script and set permissions
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh && \
     chmod -R 777 /app/instance
 
 # Remove root ownership
@@ -49,4 +50,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python docker-healthcheck.py
 
 # Run with startup script
-CMD ["/start.sh"]
+CMD ["/app/start.sh"]
