@@ -61,12 +61,13 @@
         <div class="table-responsive">
             <table id="inventoryTable" class="table table-hover align-middle mb-0 w-100">
                 <thead>
-                    <tr>
-                        <th>Product Name</th>
+                    <tr>                        <th>Product Name</th>
                         <th>Category</th>
                         <th>Description</th>
                         <th>Quantity</th>
-                        <th>Price</th>
+                        <th>Purchase Price</th>
+                        <th>Selling Price</th>
+                        <th>Profit Margin</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -81,7 +82,10 @@
                                 {{ item.quantity }}
                             </span>
                         </td>
-                        <td data-order="{{ item.price }}">Rp. {{ "{:,.2f}".format(item.price) }}</td>
+                        <td data-order="{{ item.purchase_price }}">Rp. {{ "{:,.2f}".format(item.purchase_price) }}</td>
+                        <td data-order="{{ item.selling_price }}">Rp. {{ "{:,.2f}".format(item.selling_price) }}</td>
+                        <td data-order="{{ (item.selling_price - item.purchase_price) / item.purchase_price * 100 }}">
+                            {{ "{:.1f}%".format((item.selling_price - item.purchase_price) / item.purchase_price * 100) }}</td>
                         <td>
                             <div class="btn-group">
                                 <a href="{{ url_for('main.edit_inventory', id=item.id) }}" class="btn btn-sm btn-outline-primary">
@@ -218,16 +222,14 @@ $(document).ready(function() {
             });
         }
         table.draw();
-    });
-
-    $('#priceFilter').on('change', function() {
+    });    $('#priceFilter').on('change', function() {
         let val = this.value;
         $.fn.dataTable.ext.search.pop(); // Remove previous price filter
 
         if (val) {
             let [min, max] = val.split('-').map(Number);
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                let price = parseFloat(data[4].replace(/[^\d.-]/g, ''));
+                let price = parseFloat(data[5].replace(/[^\d.-]/g, '')); // Index 5 is selling price
                 return (isNaN(min) || price >= min) && (isNaN(max) || price <= max);
             });
         }

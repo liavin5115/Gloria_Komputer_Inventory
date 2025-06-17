@@ -65,14 +65,21 @@ def receive_restock(id):
     if inventory_item:
         # Update existing inventory item
         inventory_item.quantity += restock_item.quantity
-        inventory_item.price = restock_item.price  # Update price with latest
+        old_purchase_price = inventory_item.purchase_price
+        inventory_item.purchase_price = restock_item.price  # Update purchase price with latest
+        
+        # Maintain the same profit margin when updating purchase price
+        if old_purchase_price > 0:  # Avoid division by zero
+            margin = (inventory_item.selling_price - old_purchase_price) / old_purchase_price
+            inventory_item.selling_price = restock_item.price * (1 + margin)
     else:
         # Create new inventory item
         inventory_item = Inventory(
             product_name=restock_item.product_name,
             description=restock_item.description,
             quantity=restock_item.quantity,
-            price=restock_item.price,
+            purchase_price=restock_item.price,
+            selling_price=restock_item.price * 1.2,  # Set default 20% markup
             category=restock_item.category
         )
         db.session.add(inventory_item)
@@ -83,6 +90,9 @@ def receive_restock(id):
         inventory_id=inventory_item.id,
         type='in',
         quantity=restock_item.quantity,
+        purchase_price=restock_item.price,
+        selling_price=inventory_item.selling_price,
+        status='completed',
         reference=f'Restock #{restock_item.id}',
         notes=f'Received from supplier: {restock_item.supplier}'
     )

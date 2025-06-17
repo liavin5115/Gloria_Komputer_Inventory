@@ -1,17 +1,19 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_migrate import Migrate
 from datetime import datetime
 import pytz
 import os
-
-db = SQLAlchemy()
-login_manager = LoginManager()
 
 def get_jakarta_time():
     """Get current time in Jakarta timezone (UTC+7)"""
     jakarta_tz = pytz.timezone('Asia/Jakarta')
     return datetime.now(pytz.UTC).astimezone(jakarta_tz)
+
+db = SQLAlchemy()
+login_manager = LoginManager()
+migrate = Migrate()
 
 def utc_to_local(utc_dt):
     """Convert UTC datetime to Jakarta timezone"""
@@ -24,6 +26,17 @@ def utc_to_local(utc_dt):
 
 def create_app():
     app = Flask(__name__)
+    
+    # Error handlers
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()  # Roll back db session in case of error
+        app.logger.error(f'Server Error: {error}', exc_info=True)
+        return render_template('errors/500.html'), 500
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
     
     # Configuration
     app.config['SECRET_KEY'] = 'your-secret-key'  # Change this in production
@@ -38,6 +51,7 @@ def create_app():
     
     # Initialize extensions
     db.init_app(app)
+    migrate.init_app(app, db)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Silakan login untuk mengakses halaman ini'
