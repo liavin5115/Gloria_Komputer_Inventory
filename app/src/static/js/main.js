@@ -1,46 +1,5 @@
 // Main JavaScript file for Gloria Komputer Inventory
 document.addEventListener('DOMContentLoaded', function() {
-    // Theme handling
-    const html = document.documentElement;
-    const themeToggle = document.getElementById('themeToggle');
-    
-    if (themeToggle) {
-        const icon = themeToggle.querySelector('i');
-        
-        // Check saved theme or system preference
-        const savedTheme = localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const initialTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-        
-        // Set initial theme
-        html.setAttribute('data-bs-theme', initialTheme);
-        updateThemeIcon(initialTheme === 'dark');
-        
-        // Theme toggle handler
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            html.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme === 'dark');
-        });
-        
-        // Update icon based on theme
-        function updateThemeIcon(isDark) {
-            icon.className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-stars-fill';
-        }
-        
-        // Listen for system theme changes
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-            if (!localStorage.getItem('theme')) {
-                const newTheme = e.matches ? 'dark' : 'light';
-                html.setAttribute('data-bs-theme', newTheme);
-                updateThemeIcon(e.matches);
-            }
-        });
-    }
-    
     // Animate counter values
     const animateCounter = (element) => {
         const target = parseInt(element.getAttribute('data-target'));

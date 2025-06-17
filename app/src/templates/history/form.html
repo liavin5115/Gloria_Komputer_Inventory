@@ -1,14 +1,22 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            <h2>Record Stock Movement</h2>
-            <form method="POST">
-                <div class="mb-3">
+<div class="section-header mb-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2><i class="bi bi-plus-circle me-2"></i>Record Stock Movement</h2>
+        <a href="{{ url_for('history.history_list') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to History
+        </a>
+    </div>
+</div>
+
+<div class="card bg-dark border fade-in">
+    <div class="card-body">
+        <form method="POST" class="needs-validation" novalidate>
+            <div class="row g-3">
+                <div class="col-md-6">
                     <label for="inventory_id" class="form-label">Product</label>
-                    <select class="form-select" id="inventory_id" name="inventory_id" required>
+                    <select class="form-select bg-dark text-light border-secondary" id="inventory_id" name="inventory_id" required>
                         <option value="">Select a product...</option>
                         {% for item in inventory_items %}
                         <option value="{{ item.id }}" data-current-stock="{{ item.quantity }}">
@@ -16,50 +24,87 @@
                         </option>
                         {% endfor %}
                     </select>
+                    <div class="invalid-feedback">Please select a product</div>
                 </div>
-                <div class="mb-3">
+
+                <div class="col-md-6">
                     <label for="type" class="form-label">Movement Type</label>
-                    <select class="form-select" id="type" name="type" required>
+                    <select class="form-select bg-dark text-light border-secondary" id="type" name="type" required>
                         <option value="in">Stock In</option>
                         <option value="out">Stock Out</option>
                     </select>
+                    <div class="invalid-feedback">Please select a movement type</div>
                 </div>
-                <div class="mb-3">
+
+                <div class="col-md-6">
                     <label for="quantity" class="form-label">Quantity</label>
-                    <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
+                    <input type="number" class="form-control bg-dark text-light border-secondary" id="quantity" name="quantity" required min="1">
+                    <div class="invalid-feedback">Please enter a valid quantity</div>
                 </div>
-                <div class="mb-3">
-                    <label for="reference" class="form-label">Reference</label>
-                    <input type="text" class="form-control" id="reference" name="reference" 
-                           placeholder="e.g., Invoice #, PO #, etc.">
+
+                <div class="col-md-6">
+                    <label for="reference" class="form-label">Reference (Optional)</label>
+                    <input type="text" class="form-control bg-dark text-light border-secondary" id="reference" name="reference" 
+                           placeholder="e.g., Invoice #, PO #">
                 </div>
-                <div class="mb-3">
-                    <label for="notes" class="form-label">Notes</label>
-                    <textarea class="form-control" id="notes" name="notes" rows="3" 
-                              placeholder="Additional notes about this stock movement"></textarea>
+
+                <div class="col-12">
+                    <label for="notes" class="form-label">Notes (Optional)</label>
+                    <textarea class="form-control bg-dark text-light border-secondary" id="notes" name="notes" rows="3" 
+                              placeholder="Add any additional notes here..."></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary">Save</button>
-                <a href="{{ url_for('history.history_list') }}" class="btn btn-secondary">Cancel</a>
-            </form>
-        </div>
+
+                <div class="col-12 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Save Movement
+                    </button>
+                    <a href="{{ url_for('history.history_list') }}" class="btn btn-secondary ms-2">
+                        <i class="bi bi-x-circle me-2"></i>Cancel
+                    </a>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
+{% endblock %}
 
 {% block scripts %}
 <script>
-document.getElementById('type').addEventListener('change', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form.needs-validation');
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+
+    // Handle stock quantity validation
+    const typeSelect = document.getElementById('type');
     const quantityInput = document.getElementById('quantity');
     const inventorySelect = document.getElementById('inventory_id');
-    const selectedOption = inventorySelect.options[inventorySelect.selectedIndex];
-    
-    if (this.value === 'out') {
-        const currentStock = parseInt(selectedOption.dataset.currentStock) || 0;
-        quantityInput.max = currentStock;
-    } else {
-        quantityInput.removeAttribute('max');
-    }
+
+    typeSelect.addEventListener('change', function() {
+        const selectedOption = inventorySelect.options[inventorySelect.selectedIndex];
+        if (this.value === 'out') {
+            const currentStock = parseInt(selectedOption.dataset.currentStock) || 0;
+            quantityInput.max = currentStock;
+            quantityInput.setAttribute('max', currentStock);
+        } else {
+            quantityInput.removeAttribute('max');
+        }
+    });
+
+    inventorySelect.addEventListener('change', function() {
+        if (typeSelect.value === 'out') {
+            const selectedOption = this.options[this.selectedIndex];
+            const currentStock = parseInt(selectedOption.dataset.currentStock) || 0;
+            quantityInput.max = currentStock;
+            quantityInput.setAttribute('max', currentStock);
+        }
+    });
 });
 </script>
-{% endblock %}
-
 {% endblock %}
