@@ -3,125 +3,120 @@
 {% block content %}
 <div class="section-header mb-4 fade-in">
     <div>
-        <h1 class="mb-2 display-4">Welcome to Gloria Komputer</h1>
-        <p class="lead mb-0 text-muted">Manage your computer parts and accessories inventory efficiently.</p>
+        <h1 class="mb-2 display-4">Selamat Datang di Gloria Komputer</h1>
+        <p class="lead mb-0 text-muted">Kelola inventaris komponen dan aksesoris komputer Anda dengan efisien.</p>
     </div>
 </div>
 
 <div class="row g-4">
     <div class="col-md-3">
         <div class="card stat-card h-100 hover-lift">
-            <div class="card-body d-flex flex-column">
-                <div class="icon-wrapper bg-primary-soft rounded-circle mb-3">
-                    <i class="bi bi-box-seam display-4 text-primary"></i>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">                        <h6 class="text-muted mb-2">Total Produk</h6>
+                        <span class="h3 mb-0 counter-value" data-value="{{ total_products }}">{{ total_products }}</span>
+                    </div>
+                    <div class="col-auto">
+                        <div class="icon-wrapper bg-primary-soft">
+                            <i class="bi bi-box text-primary"></i>
+                        </div>
+                    </div>
                 </div>
-                <h5 class="card-title">Total Products</h5>
-                <p class="stat-value counter-value mb-3" data-target="{{ total_products }}">0</p>
-                <a href="{{ url_for('main.inventory_list') }}" class="btn btn-outline-primary mt-auto hover-scale">
-                    <i class="bi bi-arrow-right me-2"></i> View Inventory
-                </a>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card stat-card h-100 hover-lift">
-            <div class="card-body d-flex flex-column">
-                <div class="icon-wrapper bg-warning-soft rounded-circle mb-3">
-                    <i class="bi bi-exclamation-triangle display-4 text-warning"></i>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <h6 class="text-muted mb-2">Stok Menipis</h6>
+                        <span class="h3 mb-0 counter-value">{{ low_stock }}</span>
+                    </div>
+                    <div class="col-auto">
+                        <div class="icon-wrapper bg-warning-soft">
+                            <i class="bi bi-exclamation-triangle text-warning"></i>
+                        </div>
+                    </div>
                 </div>
-                <h5 class="card-title">Low Stock Items</h5>
-                <p class="stat-value text-warning counter-value mb-3" data-target="{{ low_stock }}">0</p>
-                <a href="{{ url_for('main.inventory_list', stock='low') }}" class="btn btn-outline-warning mt-auto hover-scale">
-                    <i class="bi bi-arrow-right me-2"></i> Check Items
-                </a>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card stat-card h-100 hover-lift">
-            <div class="card-body d-flex flex-column">
-                <div class="icon-wrapper bg-info-soft rounded-circle mb-3">
-                    <i class="bi bi-tags display-4 text-info"></i>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <h6 class="text-muted mb-2">Kategori</h6>
+                        <span class="h3 mb-0 counter-value">{{ categories }}</span>
+                    </div>
+                    <div class="col-auto">
+                        <div class="icon-wrapper bg-info-soft">
+                            <i class="bi bi-tags text-info"></i>
+                        </div>
+                    </div>
                 </div>
-                <h5 class="card-title">Categories</h5>
-                <p class="stat-value text-info counter-value mb-3" data-target="{{ categories }}">0</p>
-                <button class="btn btn-outline-info mt-auto hover-scale" disabled>
-                    <i class="bi bi-grid me-2"></i> Categories
-                </button>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card stat-card h-100 hover-lift">
-            <div class="card-body d-flex flex-column">
-                <div class="icon-wrapper bg-success-soft rounded-circle mb-3">
-                    <i class="bi bi-truck display-4 text-success"></i>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <h6 class="text-muted mb-2">Pending Restock</h6>
+                        <span class="h3 mb-0 counter-value">{{ pending_restocks }}</span>
+                    </div>
+                    <div class="col-auto">
+                        <div class="icon-wrapper bg-success-soft">
+                            <i class="bi bi-cart-plus text-success"></i>
+                        </div>
+                    </div>
                 </div>
-                <h5 class="card-title">Recent Activities</h5>                <p class="stat-value text-success counter-value mb-3" data-target="{{ recent_activities }}">0</p>
-                <a href="{{ url_for('history.history_list') }}" class="btn btn-outline-success mt-auto hover-scale">
-                    <i class="bi bi-clock-history me-2"></i> View History
-                </a>
             </div>
         </div>
     </div>
 </div>
 
-{% if recent_items %}
+{% if low_stock_items %}
 <div class="row mt-5 fade-in">
     <div class="col-12">
-        <h3 class="mb-4">Recent Updates</h3>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>Category</th>
-                        <th>Stock</th>
-                        <th>Last Updated</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in recent_items %}
-                    <tr class="hover-row">
-                        <td>
-                            <div class="d-flex align-items-center">
-                                {% if item.image_url %}
-                                <img src="{{ item.image_url }}" class="rounded me-3" width="40" height="40" alt="{{ item.name }}">
-                                {% else %}
-                                <div class="placeholder-image rounded me-3">
-                                    <i class="bi bi-image text-muted"></i>
-                                </div>
-                                {% endif %}
-                                <div>
-                                    <h6 class="mb-0">{{ item.name }}</h6>
-                                    <small class="text-muted">{{ item.code }}</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td><span class="badge bg-info-soft text-info">{{ item.category }}</span></td>
-                        <td>
-                            {% if item.stock <= item.min_stock %}
-                            <span class="badge bg-danger-soft text-danger">Low Stock ({{ item.stock }})</span>
-                            {% else %}
-                            <span class="badge bg-success-soft text-success">{{ item.stock }} in stock</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ item.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>
-                            <div class="btn-group">
-                                <a href="{{ url_for('main.edit_inventory', id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="{{ url_for('main.view_inventory', id=item.id) }}" class="btn btn-sm btn-outline-info">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="card hover-shadow">
+            <div class="card-header bg-warning-soft">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Peringatan Stok Menipis
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Nama Produk</th>
+                                <th>Kategori</th>
+                                <th>Stok Tersedia</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in low_stock_items %}
+                            <tr>
+                                <td>{{ item.product_name }}</td>
+                                <td>{{ item.category }}</td>
+                                <td>
+                                    <span class="badge bg-danger">{{ item.quantity }}</span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('restock.add_restock') }}" class="btn btn-sm btn-primary">
+                                        <i class="bi bi-cart-plus"></i> Restock
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -130,26 +125,27 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Animate counter values
     const counterElements = document.querySelectorAll('.counter-value');
     counterElements.forEach(counter => {
-        const target = parseInt(counter.getAttribute('data-target'));
-        const duration = 1000;
-        const startValue = 0;
-        const increment = target / (duration / 16);
-        let currentValue = startValue;
-
+        // Store the original value
+        const originalValue = counter.textContent;
+        if (isNaN(parseInt(originalValue))) return;
+        
         const updateCounter = () => {
-            currentValue += increment;
-            if (currentValue < target) {
-                counter.textContent = Math.round(currentValue);
+            const target = parseInt(originalValue);
+            const current = parseInt(counter.textContent);
+            const increment = Math.ceil(target / 20);
+            
+            if (current < target) {
+                counter.textContent = Math.min(current + increment, target);
                 requestAnimationFrame(updateCounter);
-            } else {
-                counter.textContent = target;
             }
         };
-
-        updateCounter();
+        
+        // Start from 0
+        counter.textContent = '0';
+        // Begin animation
+        requestAnimationFrame(updateCounter);
     });
 });
 </script>

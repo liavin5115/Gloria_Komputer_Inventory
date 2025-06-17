@@ -1,9 +1,12 @@
 // Main JavaScript file for Gloria Komputer Inventory
-document.addEventListener('DOMContentLoaded', function() {
-    // Animate counter values
+document.addEventListener('DOMContentLoaded', function() {    // Animate counter values
     const animateCounter = (element) => {
-        const target = parseInt(element.getAttribute('data-target'));
-        const duration = 1000;
+        // Get the original value
+        const target = parseInt(element.dataset.originalValue || element.textContent);
+        if (isNaN(target)) return;
+
+        // Animation settings
+        const duration = 1500; // Slower animation
         const startValue = 0;
         const increment = target / (duration / 16);
         let currentValue = startValue;
@@ -18,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
 
+        // Start the animation
         updateCounter();
     };
 
@@ -36,10 +40,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 observer.unobserve(entry.target);
             }
         });
-    }, observerOptions);
-
-    counterElements.forEach(counter => {
-        counterObserver.observe(counter);
+    }, observerOptions);    counterElements.forEach(counter => {
+        // Store the original value immediately
+        const originalValue = counter.textContent;
+        if (!isNaN(parseInt(originalValue))) {
+            counter.dataset.originalValue = originalValue;
+            
+            // Start observing
+            counterObserver.observe(counter);
+            
+            // Additional safeguard
+            counter.addEventListener('animationend', () => {
+                if (isNaN(parseInt(counter.textContent))) {
+                    counter.textContent = counter.dataset.originalValue;
+                }
+            });
+        }
     });
     
     // Auto-hide flash messages

@@ -4,17 +4,17 @@
 <!-- Header Section -->
 <div class="section-header mb-4 fade-in">
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-        <h2 class="section-title mb-0">
-            <i class="bi bi-clock-history text-primary"></i>
-            Stock Movement History
-        </h2>
+        <div>
+            <h2 class="mb-1"><i class="bi bi-clock-history me-2"></i>Riwayat Pergerakan Stok</h2>
+            <p class="text-muted mb-0">Pantau semua pergerakan stok masuk dan keluar</p>
+        </div>
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#filterSection">
-                <i class="bi bi-funnel me-2"></i>Filters
+            <button class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filterSection">
+                <i class="bi bi-funnel me-1"></i>Filter
             </button>
-            <button type="button" class="btn btn-primary hover-lift" onclick="location.href='{{ url_for('history.add_history') }}'">
-                <i class="bi bi-plus-circle me-2"></i>Record Movement
-            </button>
+            <a href="{{ url_for('history.add_history') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Tambah Baru
+            </a>
         </div>
     </div>
 </div>
@@ -23,42 +23,44 @@
 <div id="filterSection" class="collapse show mb-4">
     <div class="card bg-dark border fade-in">
         <div class="card-body">
-            <form id="filterForm" class="row g-3">
-                <div class="col-md-3 col-sm-6">
-                    <label for="product" class="form-label small text-muted">Product</label>
-                    <select class="form-select form-select-sm" id="product" name="product">
-                        <option value="">All Products</option>
-                        {% for product in products %}
-                        <option value="{{ product.id }}" {% if request.args.get('product')|int == product.id %}selected{% endif %}>
-                            {{ product.product_name }}
+            <form method="GET" class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Produk</label>
+                    <select name="product" class="form-select">
+                        <option value="">Semua Produk</option>
+                        {% for item in inventory_items %}
+                        <option value="{{ item.id }}" {% if request.args.get('product')|int == item.id %}selected{% endif %}>
+                            {{ item.product_name }}
                         </option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-3 col-sm-6">
-                    <label for="type" class="form-label small text-muted">Movement Type</label>
-                    <select class="form-select form-select-sm" id="type" name="type">
-                        <option value="">All Types</option>
-                        <option value="in" {% if request.args.get('type') == 'in' %}selected{% endif %}>Stock In</option>
-                        <option value="out" {% if request.args.get('type') == 'out' %}selected{% endif %}>Stock Out</option>
+                
+                <div class="col-md-3">
+                    <label class="form-label">Jenis</label>
+                    <select name="type" class="form-select">
+                        <option value="">Semua</option>
+                        <option value="in" {% if request.args.get('type') == 'in' %}selected{% endif %}>Masuk</option>
+                        <option value="out" {% if request.args.get('type') == 'out' %}selected{% endif %}>Keluar</option>
                     </select>
                 </div>
-                <div class="col-md-3 col-sm-6">
-                    <label for="start_date" class="form-label small text-muted">Start Date</label>
-                    <input type="date" class="form-control form-control-sm" id="start_date" name="start_date" 
-                           value="{{ request.args.get('start_date', '') }}">
+                
+                <div class="col-md-3">
+                    <label class="form-label">Tanggal Mulai</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ request.args.get('start_date', '') }}">
                 </div>
-                <div class="col-md-3 col-sm-6">
-                    <label for="end_date" class="form-label small text-muted">End Date</label>
-                    <input type="date" class="form-control form-control-sm" id="end_date" name="end_date" 
-                           value="{{ request.args.get('end_date', '') }}">
+                
+                <div class="col-md-3">
+                    <label class="form-label">Tanggal Akhir</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ request.args.get('end_date', '') }}">
                 </div>
+                
                 <div class="col-12 d-flex justify-content-end gap-2">
-                    <button type="button" id="resetFilters" class="btn btn-outline-secondary btn-sm hover-scale">
-                        <i class="bi bi-x-circle me-2"></i>Reset
+                    <button type="button" id="resetFilters" class="btn btn-secondary">
+                        <i class="bi bi-x-circle me-1"></i>Reset
                     </button>
-                    <button type="submit" class="btn btn-primary btn-sm hover-scale">
-                        <i class="bi bi-funnel me-2"></i>Apply Filters
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search me-1"></i>Cari
                     </button>
                 </div>
             </form>
@@ -69,45 +71,51 @@
 <!-- Summary Cards -->
 <div class="row g-4 mb-4 fade-in">
     <div class="col-md-4">
-        <div class="card hover-lift h-100">
+        <div class="card stat-card hover-lift">
             <div class="card-body">
+                <h6 class="text-muted">Total Pergerakan</h6>
                 <div class="d-flex align-items-center">
-                    <div class="icon-wrapper bg-primary-soft rounded-3 p-3 me-3">
-                        <i class="bi bi-arrow-left-right fs-3 text-primary"></i>
+                    <div class="flex-shrink-0">
+                        <div class="stat-icon bg-primary-soft">
+                            <i class="bi bi-arrow-left-right text-primary"></i>
+                        </div>
                     </div>
-                    <div>
-                        <h6 class="card-subtitle mb-1 text-muted">Total Movements</h6>
-                        <h2 class="card-title mb-0 display-6">{{ histories|length }}</h2>
+                    <div class="flex-grow-1 ms-3">
+                        <h3 class="mb-0">{{ total_movements }}</h3>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card hover-lift h-100">
+        <div class="card stat-card hover-lift">
             <div class="card-body">
+                <h6 class="text-muted">Total Masuk</h6>
                 <div class="d-flex align-items-center">
-                    <div class="icon-wrapper bg-success-soft rounded-3 p-3 me-3">
-                        <i class="bi bi-box-arrow-in-right fs-3 text-success"></i>
+                    <div class="flex-shrink-0">
+                        <div class="stat-icon bg-success-soft">
+                            <i class="bi bi-box-arrow-in-down text-success"></i>
+                        </div>
                     </div>
-                    <div>
-                        <h6 class="card-subtitle mb-1 text-muted">Total Stock In</h6>
-                        <h2 class="card-title mb-0 display-6 text-success">{{ total_in }}</h2>
+                    <div class="flex-grow-1 ms-3">
+                        <h3 class="mb-0">{{ total_in }}</h3>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card hover-lift h-100">
+        <div class="card stat-card hover-lift">
             <div class="card-body">
+                <h6 class="text-muted">Total Keluar</h6>
                 <div class="d-flex align-items-center">
-                    <div class="icon-wrapper bg-danger-soft rounded-3 p-3 me-3">
-                        <i class="bi bi-box-arrow-right fs-3 text-danger"></i>
+                    <div class="flex-shrink-0">
+                        <div class="stat-icon bg-danger-soft">
+                            <i class="bi bi-box-arrow-up text-danger"></i>
+                        </div>
                     </div>
-                    <div>
-                        <h6 class="card-subtitle mb-1 text-muted">Total Stock Out</h6>
-                        <h2 class="card-title mb-0 display-6 text-danger">{{ total_out }}</h2>
+                    <div class="flex-grow-1 ms-3">
+                        <h3 class="mb-0">{{ total_out }}</h3>
                     </div>
                 </div>
             </div>
@@ -119,47 +127,32 @@
 <div class="card bg-dark border hover-shadow fade-in">
     <div class="card-body">
         <div class="table-responsive">
-            <table id="historyTable" class="table table-hover align-middle mb-0">
+            <table id="historyTable" class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Date & Time</th>
-                        <th>Product</th>
-                        <th class="text-center" style="width: 120px;">Type</th>
-                        <th class="text-end" style="width: 100px;">Quantity</th>
-                        <th>Reference</th>
-                        <th>Notes</th>
+                        <th>Tanggal</th>
+                        <th>Produk</th>
+                        <th>Jenis</th>
+                        <th>Jumlah</th>
+                        <th>Referensi</th>
+                        <th>Catatan</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for history in histories %}
-                    <tr class="fade-in" style="--delay: {{ loop.index * 0.05 }}s">
-                        <td class="text-nowrap fw-medium">{{ history.date.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <tr>
+                        <td>{{ history.date.strftime('%d/%m/%Y %H:%M') }}</td>
                         <td>{{ history.inventory.product_name }}</td>
-                        <td class="text-center">
-                            <span class="badge {% if history.type == 'in' %}bg-success{% else %}bg-danger{% endif %} rounded-pill">
-                                <i class="bi {% if history.type == 'in' %}bi-box-arrow-in-right{% else %}bi-box-arrow-right{% endif %} me-1"></i>
-                                {{ history.type|upper }}
-                            </span>
-                        </td>
-                        <td class="text-end fw-medium">{{ history.quantity }}</td>
                         <td>
-                            {% if history.reference %}
-                            <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{ history.reference }}">
-                                {{ history.reference|truncate(30) }}
-                            </span>
+                            {% if history.type == 'in' %}
+                            <span class="badge bg-success">Masuk</span>
                             {% else %}
-                            <span class="text-muted">-</span>
+                            <span class="badge bg-danger">Keluar</span>
                             {% endif %}
                         </td>
-                        <td>
-                            {% if history.notes %}
-                            <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{ history.notes }}">
-                                {{ history.notes|truncate(50) }}
-                            </span>
-                            {% else %}
-                            <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
+                        <td>{{ history.quantity }}</td>
+                        <td>{{ history.reference or '-' }}</td>
+                        <td>{{ history.notes or '-' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -173,8 +166,9 @@
      style="background: rgba(0,0,0,0.5); z-index: 9999;">
     <div class="position-absolute top-50 start-50 translate-middle text-light">
         <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
+            <span class="visually-hidden">Memuat...</span>
         </div>
+        <div class="mt-2">Memuat data...</div>
     </div>
 </div>
 {% endblock %}
@@ -182,76 +176,56 @@
 {% block scripts %}
 <script>
 $(document).ready(function() {
-    // Initialize tooltips
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.forEach(function(tooltipTriggerEl) {
-        new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Initialize DataTable with configuration
-    var table = $('#historyTable').DataTable({
-        order: [[0, 'desc']],
-        pageLength: 25,
-        dom: '<"row mb-3"<"col-md-6"B><"col-md-6"f>>rt<"row"<"col-md-6"i><"col-md-6"p>>',
+    // Initialize DataTable
+    $('#historyTable').DataTable({
+        dom: 'Bfrtip',
         buttons: [
             {
-                extend: 'collection',
-                text: '<i class="bi bi-download me-2"></i>Export',
-                className: 'btn btn-secondary btn-sm hover-scale',
-                buttons: [
-                    {
-                        extend: 'csv',
-                        text: '<i class="bi bi-filetype-csv me-2"></i>CSV',
-                        className: 'btn btn-sm btn-dark hover-scale'
-                    },
-                    {
-                        extend: 'excel',
-                        text: '<i class="bi bi-file-earmark-excel me-2"></i>Excel',
-                        className: 'btn btn-sm btn-success hover-scale'
-                    },
-                    {
-                        extend: 'pdf',
-                        text: '<i class="bi bi-file-earmark-pdf me-2"></i>PDF',
-                        className: 'btn btn-sm btn-danger hover-scale'
-                    },
-                    {
-                        extend: 'print',
-                        text: '<i class="bi bi-printer me-2"></i>Print',
-                        className: 'btn btn-sm btn-info hover-scale'
-                    }
-                ]
+                extend: 'excel',
+                text: '<i class="bi bi-file-earmark-excel me-1"></i>Excel',
+                className: 'btn btn-success btn-sm',
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4, 5]
+                }
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="bi bi-file-earmark-pdf me-1"></i>PDF',
+                className: 'btn btn-danger btn-sm',
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4, 5]
+                }
+            },
+            {
+                extend: 'print',
+                text: '<i class="bi bi-printer me-1"></i>Print',
+                className: 'btn btn-secondary btn-sm',
+                exportOptions: {
+                    columns: [0, 1, 2, 3, 4, 5]
+                }
             }
         ],
         language: {
-            search: "",
-            searchPlaceholder: "Search records...",
-            lengthMenu: "_MENU_ per page",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            search: "Cari:",
+            lengthMenu: "Tampilkan _MENU_ data",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+            infoEmpty: "Tidak ada data yang ditampilkan",
+            infoFiltered: "(difilter dari _MAX_ total data)",
+            zeroRecords: "Tidak ada data yang cocok",
             paginate: {
-                first: '<i class="bi bi-chevron-double-left"></i>',
-                last: '<i class="bi bi-chevron-double-right"></i>',
-                next: '<i class="bi bi-chevron-right"></i>',
-                previous: '<i class="bi bi-chevron-left"></i>'
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
             }
         }
     });
 
-    // Enhance DataTable styling
-    $('.dataTables_wrapper .dataTables_filter input').addClass('form-control form-control-sm ms-2');
-    $('.dataTables_wrapper .dataTables_length select').addClass('form-select form-select-sm mx-2');
+    // Initialize tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
 
-    // Handle filter form submission with loading overlay
-    $('#filterForm').on('submit', function(e) {
-        e.preventDefault();
-        $('#loadingOverlay').removeClass('d-none');
-        var formData = new FormData(this);
-        var params = new URLSearchParams(formData);
-        window.location.href = "{{ url_for('history.history_list') }}?" + params.toString();
-    });
-
-    // Reset filters with loading overlay
+    // Reset filters
     $('#resetFilters').on('click', function() {
-        $('#loadingOverlay').removeClass('d-none');
         window.location.href = "{{ url_for('history.history_list') }}";
     });
 

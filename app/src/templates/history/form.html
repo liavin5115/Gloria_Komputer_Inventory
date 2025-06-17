@@ -3,65 +3,71 @@
 {% block content %}
 <div class="section-header mb-4 fade-in">
     <div class="d-flex justify-content-between align-items-center">
-        <h2><i class="bi bi-plus-circle me-2"></i>Record Stock Movement</h2>
-        <a href="{{ url_for('history.history_list') }}" class="btn btn-secondary">
-            <i class="bi bi-arrow-left me-2"></i>Back to History
-        </a>
+        <h2><i class="bi bi-plus-circle me-2"></i>Catat Pergerakan Stok</h2>
     </div>
 </div>
 
 <div class="card bg-dark border fade-in">
     <div class="card-body">
         <form method="POST" class="needs-validation" novalidate>
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label for="inventory_id" class="form-label">Product</label>
-                    <select class="form-select bg-dark text-light border-secondary" id="inventory_id" name="inventory_id" required>
-                        <option value="">Select a product...</option>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="inventory_id" class="form-label">Produk</label>
+                    <select class="form-select" id="inventory_id" name="inventory_id" required>
+                        <option value="">Pilih produk...</option>
                         {% for item in inventory_items %}
-                        <option value="{{ item.id }}" data-current-stock="{{ item.quantity }}">
-                            {{ item.product_name }} (Current Stock: {{ item.quantity }})
+                        <option value="{{ item.id }}" data-stock="{{ item.quantity }}">
+                            {{ item.product_name }} (Stok: {{ item.quantity }})
                         </option>
                         {% endfor %}
                     </select>
-                    <div class="invalid-feedback">Please select a product</div>
+                    <div class="invalid-feedback">
+                        Silakan pilih produk
+                    </div>
                 </div>
-
-                <div class="col-md-6">
-                    <label for="type" class="form-label">Movement Type</label>
-                    <select class="form-select bg-dark text-light border-secondary" id="type" name="type" required>
-                        <option value="in">Stock In</option>
-                        <option value="out">Stock Out</option>
+                
+                <div class="col-md-6 mb-3">
+                    <label for="type" class="form-label">Jenis Pergerakan</label>
+                    <select class="form-select" id="type" name="type" required>
+                        <option value="">Pilih jenis...</option>
+                        <option value="in">Masuk</option>
+                        <option value="out">Keluar</option>
                     </select>
-                    <div class="invalid-feedback">Please select a movement type</div>
+                    <div class="invalid-feedback">
+                        Silakan pilih jenis pergerakan
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="quantity" class="form-label">Jumlah</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
+                    <div class="invalid-feedback" id="quantityFeedback">
+                        Jumlah harus lebih dari 0
+                    </div>
                 </div>
 
-                <div class="col-md-6">
-                    <label for="quantity" class="form-label">Quantity</label>
-                    <input type="number" class="form-control bg-dark text-light border-secondary" id="quantity" name="quantity" required min="1">
-                    <div class="invalid-feedback">Please enter a valid quantity</div>
+                <div class="col-md-6 mb-3">
+                    <label for="reference" class="form-label">Nomor Referensi</label>
+                    <input type="text" class="form-control" id="reference" name="reference" 
+                           placeholder="contoh: INV-001, PO-123">
                 </div>
+            </div>
 
-                <div class="col-md-6">
-                    <label for="reference" class="form-label">Reference (Optional)</label>
-                    <input type="text" class="form-control bg-dark text-light border-secondary" id="reference" name="reference" 
-                           placeholder="e.g., Invoice #, PO #">
-                </div>
+            <div class="mb-3">
+                <label for="notes" class="form-label">Catatan</label>
+                <textarea class="form-control" id="notes" name="notes" rows="3" 
+                          placeholder="Tambahkan catatan atau keterangan..."></textarea>
+            </div>
 
-                <div class="col-12">
-                    <label for="notes" class="form-label">Notes (Optional)</label>
-                    <textarea class="form-control bg-dark text-light border-secondary" id="notes" name="notes" rows="3" 
-                              placeholder="Add any additional notes here..."></textarea>
-                </div>
-
-                <div class="col-12 mt-4">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-2"></i>Save Movement
-                    </button>
-                    <a href="{{ url_for('history.history_list') }}" class="btn btn-secondary ms-2">
-                        <i class="bi bi-x-circle me-2"></i>Cancel
-                    </a>
-                </div>
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{{ url_for('history.history_list') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle me-1"></i>Batal
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i>Simpan
+                </button>
             </div>
         </form>
     </div>
@@ -71,7 +77,6 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Form validation
     const form = document.querySelector('form.needs-validation');
     form.addEventListener('submit', function(event) {
         if (!form.checkValidity()) {
@@ -81,30 +86,37 @@ document.addEventListener('DOMContentLoaded', function() {
         form.classList.add('was-validated');
     });
 
-    // Handle stock quantity validation
     const typeSelect = document.getElementById('type');
     const quantityInput = document.getElementById('quantity');
     const inventorySelect = document.getElementById('inventory_id');
+    const quantityFeedback = document.getElementById('quantityFeedback');
 
-    typeSelect.addEventListener('change', function() {
-        const selectedOption = inventorySelect.options[inventorySelect.selectedIndex];
-        if (this.value === 'out') {
-            const currentStock = parseInt(selectedOption.dataset.currentStock) || 0;
+    function validateQuantity() {
+        const selectedOption = inventorySelect.selectedOptions[0];
+        if (!selectedOption) return;
+        
+        const currentStock = parseInt(selectedOption.dataset.stock);
+        const quantity = parseInt(quantityInput.value);
+        
+        if (typeSelect.value === 'out') {
             quantityInput.max = currentStock;
-            quantityInput.setAttribute('max', currentStock);
+            if (quantity > currentStock) {
+                quantityInput.setCustomValidity('Stok tidak mencukupi');
+                quantityFeedback.textContent = 'Jumlah melebihi stok tersedia';
+            } else {
+                quantityInput.setCustomValidity('');
+                quantityFeedback.textContent = 'Jumlah harus lebih dari 0';
+            }
         } else {
             quantityInput.removeAttribute('max');
+            quantityInput.setCustomValidity('');
+            quantityFeedback.textContent = 'Jumlah harus lebih dari 0';
         }
-    });
+    }
 
-    inventorySelect.addEventListener('change', function() {
-        if (typeSelect.value === 'out') {
-            const selectedOption = this.options[this.selectedIndex];
-            const currentStock = parseInt(selectedOption.dataset.currentStock) || 0;
-            quantityInput.max = currentStock;
-            quantityInput.setAttribute('max', currentStock);
-        }
-    });
+    typeSelect.addEventListener('change', validateQuantity);
+    inventorySelect.addEventListener('change', validateQuantity);
+    quantityInput.addEventListener('input', validateQuantity);
 });
 </script>
 {% endblock %}

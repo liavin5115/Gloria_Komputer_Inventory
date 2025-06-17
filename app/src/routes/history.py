@@ -88,7 +88,7 @@ def add_history():
         db.session.add(history)
         db.session.commit()
         
-        flash('Stock movement recorded successfully!', 'success')
+        flash('Pergerakan stok berhasil dicatat', 'success')
         return redirect(url_for('history.history_list'))
     
     # Get all inventory items for the form
