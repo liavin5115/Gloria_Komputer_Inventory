@@ -28,15 +28,15 @@ def create_app():
     app = Flask(__name__)
     
     # Error handlers
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
+
     @app.errorhandler(500)
     def internal_error(error):
         db.session.rollback()  # Roll back db session in case of error
         app.logger.error(f'Server Error: {error}', exc_info=True)
         return render_template('errors/500.html'), 500
-
-    @app.errorhandler(404)
-    def not_found_error(error):
-        return render_template('errors/404.html'), 404
     
     # Configuration
     app.config['SECRET_KEY'] = 'your-secret-key'  # Change this in production
@@ -57,6 +57,13 @@ def create_app():
     login_manager.login_message = 'Silakan login untuk mengakses halaman ini'
     login_manager.login_message_category = 'warning'
     
+    try:
+        with app.app_context():
+            db.create_all()
+            print("Database tables created successfully")
+    except Exception as e:
+        print(f"Error initializing database: {e}")
+        
     @login_manager.user_loader
     def load_user(id):
         from app.src.models.user import User
@@ -68,14 +75,13 @@ def create_app():
         from app.src.routes.restock import restock
         from app.src.routes.history import history
         from app.src.routes.auth import auth
-        
+        from app.src.routes.statistics import statistics  # Add this line
+
         # Register blueprints
         app.register_blueprint(main)
         app.register_blueprint(restock)
         app.register_blueprint(history)
         app.register_blueprint(auth)
-        
-        # Create database tables
-        db.create_all()
+        app.register_blueprint(statistics)  # Add this line
     
     return app

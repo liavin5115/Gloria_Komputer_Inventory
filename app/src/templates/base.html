@@ -28,27 +28,32 @@
                 <ul class="navbar-nav me-auto">
                     {% if current_user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" 
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint == 'main.index' }}" 
                            href="{{ url_for('main.index') }}">
                             <i class="bi bi-house me-1"></i>Beranda
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.inventory_list' %}active{% endif %}" 
-                           href="{{ url_for('main.inventory_list') }}">
+                    <li class="nav-item">                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint == 'main.inventory' }}" 
+                           href="{{ url_for('main.inventory') }}">
                             <i class="bi bi-box me-1"></i>Inventaris
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint.startswith('history.') %}active{% endif %}" 
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('history.') }}" 
                            href="{{ url_for('history.history_list') }}">
                             <i class="bi bi-clock-history me-1"></i>Riwayat
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint.startswith('restock.') %}active{% endif %}" 
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('restock.') }}" 
                            href="{{ url_for('restock.restock_list') }}">
                             <i class="bi bi-cart-plus me-1"></i>Restock
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('statistics.') }}" 
+                           href="{{ url_for('statistics.index') }}">
+                            <i class="bi bi-graph-up me-1"></i>Statistik
                         </a>
                     </li>
                     {% endif %}

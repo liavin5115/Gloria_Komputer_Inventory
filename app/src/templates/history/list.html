@@ -134,15 +134,23 @@
                         <th>Produk</th>
                         <th>Jenis</th>
                         <th>Jumlah</th>
+                        <th>Harga Satuan</th>
+                        <th>Total</th>
+                        <th>Pengguna</th>
                         <th>Referensi</th>
-                        <th>Catatan</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for history in histories %}
                     <tr>
                         <td>{{ history.date.strftime('%d/%m/%Y %H:%M') }}</td>
-                        <td>{{ history.inventory.product_name }}</td>
+                        <td>
+                            {{ history.inventory.product_name }}
+                            <br>
+                            <small class="text-muted">{{ history.inventory.category }}</small>
+                        </td>
                         <td>
                             {% if history.type == 'in' %}
                             <span class="badge bg-success">Masuk</span>
@@ -151,12 +159,58 @@
                             {% endif %}
                         </td>
                         <td>{{ history.quantity }}</td>
+                        <td>
+                            {% if history.type == 'in' %}
+                            Rp. {{ "{:,.0f}".format(history.purchase_price) }}
+                            {% else %}
+                            Rp. {{ "{:,.0f}".format(history.selling_price) }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if history.type == 'in' %}
+                            Rp. {{ "{:,.0f}".format(history.purchase_price * history.quantity) }}
+                            {% else %}
+                            Rp. {{ "{:,.0f}".format(history.selling_price * history.quantity) }}
+                            {% endif %}
+                        </td>
+                        <td>{{ history.user.name if history.user else '-' }}</td>
                         <td>{{ history.reference or '-' }}</td>
-                        <td>{{ history.notes or '-' }}</td>
+                        <td>
+                            {% if history.status == 'completed' %}
+                            <span class="badge bg-success">Selesai</span>
+                            {% elif history.status == 'cancelled' %}
+                            <span class="badge bg-danger">Dibatalkan</span>
+                            {% else %}
+                            <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-sm btn-info" 
+                                    onclick="showDetail('{{ history.id }}')">
+                                <i class="bi bi-info-circle"></i>
+                            </button>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detail Pergerakan Stok</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="detailContent">
+                    <!-- Content will be loaded here -->
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -237,5 +291,57 @@ $(document).ready(function() {
         }, 1000);
     });
 });
+
+function showDetail(id) {
+    fetch(`/history/${id}/detail`)
+        .then(response => response.json())
+        .then(data => {
+            const content = `
+                <dl class="row">
+                    <dt class="col-sm-4">Tanggal</dt>
+                    <dd class="col-sm-8">${data.date}</dd>
+                    
+                    <dt class="col-sm-4">Produk</dt>
+                    <dd class="col-sm-8">${data.product_name}</dd>
+                    
+                    <dt class="col-sm-4">Kategori</dt>
+                    <dd class="col-sm-8">${data.category}</dd>
+                    
+                    <dt class="col-sm-4">Jenis</dt>
+                    <dd class="col-sm-8">
+                        <span class="badge ${data.type === 'in' ? 'bg-success' : 'bg-danger'}">
+                            ${data.type === 'in' ? 'Masuk' : 'Keluar'}
+                        </span>
+                    </dd>
+                    
+                    <dt class="col-sm-4">Jumlah</dt>
+                    <dd class="col-sm-8">${data.quantity}</dd>
+                    
+                    <dt class="col-sm-4">Harga Satuan</dt>
+                    <dd class="col-sm-8">Rp. ${data.unit_price.toLocaleString()}</dd>
+                    
+                    <dt class="col-sm-4">Total</dt>
+                    <dd class="col-sm-8">Rp. ${data.total_price.toLocaleString()}</dd>
+                    
+                    <dt class="col-sm-4">Stok Sebelum</dt>
+                    <dd class="col-sm-8">${data.stock_before}</dd>
+                    
+                    <dt class="col-sm-4">Stok Sesudah</dt>
+                    <dd class="col-sm-8">${data.stock_after}</dd>
+                    
+                    <dt class="col-sm-4">Pengguna</dt>
+                    <dd class="col-sm-8">${data.user || '-'}</dd>
+                    
+                    <dt class="col-sm-4">Referensi</dt>
+                    <dd class="col-sm-8">${data.reference || '-'}</dd>
+                    
+                    <dt class="col-sm-4">Catatan</dt>
+                    <dd class="col-sm-8">${data.notes || '-'}</dd>
+                </dl>
+            `;
+            document.getElementById('detailContent').innerHTML = content;
+            new bootstrap.Modal(document.getElementById('detailModal')).show();
+        });
+}
 </script>
 {% endblock %}

@@ -1,17 +1,19 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
-from app.src.models.inventory import Inventory 
+from app.src.models.inventory import Inventory
 from app.src.models.restock import Restock
 from app.src.models.stock_history import StockHistory
-from app.src import db, get_jakarta_time
-from sqlalchemy import or_, func
-from datetime import datetime
+from app.src import db, get_jakarta_time  # Add get_jakarta_time import
+from sqlalchemy import or_
 
 main = Blueprint('main', __name__)
 
 @main.route('/')
 @login_required
 def index():
+    from sqlalchemy import func
+    from datetime import datetime, timedelta
+    
     # Get total products and inventory value
     inventory_stats = db.session.query(
         func.count(Inventory.id).label('total_products'),
@@ -27,6 +29,9 @@ def index():
     # Get distinct categories count
     categories = db.session.query(Inventory.category).distinct().count()
     
+    # Get low stock items for alert
+    low_stock_items = Inventory.query.filter(Inventory.quantity < 5).all()
+    
     # Get pending restock count
     pending_restocks = Restock.query.filter_by(status='pending').count()
     
@@ -39,6 +44,7 @@ def index():
         func.sum(StockHistory.quantity * StockHistory.selling_price)
     ).filter(
         StockHistory.type == 'out',
+        StockHistory.status == 'completed',
         func.date(StockHistory.date) == today
     ).scalar() or 0
     
@@ -47,10 +53,26 @@ def index():
         func.sum(StockHistory.quantity * StockHistory.selling_price)
     ).filter(
         StockHistory.type == 'out',
+        StockHistory.status == 'completed',
         func.date(StockHistory.date) >= month_start
     ).scalar() or 0
     
-    # Get products with low stock for warning display
+    # Calculate profits
+    daily_profit = db.session.query(
+        func.sum((StockHistory.selling_price - StockHistory.purchase_price) * StockHistory.quantity)
+    ).filter(
+        StockHistory.type == 'out',
+        StockHistory.status == 'completed',
+        func.date(StockHistory.date) == today
+    ).scalar() or 0
+    
+    monthly_profit = db.session.query(
+        func.sum((StockHistory.selling_price - StockHistory.purchase_price) * StockHistory.quantity)
+    ).filter(
+        StockHistory.type == 'out',
+        StockHistory.status == 'completed',
+        func.date(StockHistory.date) >= month_start
+    ).scalar() or 0    # Get products with low stock for warning display
     low_stock_items = Inventory.query.filter(Inventory.quantity < 5).all()
     
     # Get recent activities
@@ -65,21 +87,73 @@ def index():
                          total_inventory_value=total_inventory_value,
                          daily_sales=daily_sales,
                          monthly_sales=monthly_sales,
+                         daily_profit=daily_profit,
+                         monthly_profit=monthly_profit,
+                         recent_activities=recent_activities)
+    
+    # Get low stock items for the dashboard
+    low_stock_items = Inventory.query.filter(Inventory.quantity < 5).all()
+    
+    # Get recent activities
+    recent_activities = StockHistory.query.order_by(StockHistory.date.desc()).limit(5).all()
+    
+    return render_template('index.html', 
+                         total_products=total_products,
+                         low_stock=low_stock,
+                         categories=categories,
+                         pending_restocks=pending_restocks,
+                         low_stock_items=low_stock_items,
                          recent_activities=recent_activities)
 
 @main.route('/inventory')
 @login_required
 def inventory():
-    # Get all distinct categories for the filter dropdown
-    categories = db.session.query(Inventory.category).distinct().all()
-    categories = [cat[0] for cat in categories if cat[0]]  # Remove any None values
+    # Get query parameters
+    search = request.args.get('search', '')
+    category = request.args.get('category', '')
+    sort = request.args.get('sort', 'name')
     
-    # Get all inventory items
-    inventory_items = Inventory.query.all()
+    # Base query
+    query = Inventory.query
+    
+    # Apply search filter
+    if search:
+        search_filter = or_(
+            Inventory.product_name.ilike(f'%{search}%'),
+            Inventory.description.ilike(f'%{search}%'),
+            Inventory.category.ilike(f'%{search}%')
+        )
+        query = query.filter(search_filter)
+    
+    # Apply category filter
+    if category:
+        query = query.filter(Inventory.category == category)
+    
+    # Apply sorting
+    if sort == 'name':
+        query = query.order_by(Inventory.product_name)
+    elif sort == 'quantity_asc':
+        query = query.order_by(Inventory.quantity)
+    elif sort == 'quantity_desc':
+        query = query.order_by(Inventory.quantity.desc())
+    elif sort == 'price_asc':
+        query = query.order_by(Inventory.selling_price)
+    elif sort == 'price_desc':
+        query = query.order_by(Inventory.selling_price.desc())
+    
+    # Execute query
+    items = query.all()
+    
+    # Get distinct categories for filter
+    categories = db.session.query(Inventory.category).distinct().all()
+    categories = [cat[0] for cat in categories if cat[0]]  # Remove None values
     
     return render_template('inventory/list.html',
-                         inventory_items=inventory_items,
-                         categories=categories)
+                         items=items,
+                         categories=categories,
+                         search=search,
+                         selected_category=category,
+                         sort=sort)
 
 @main.route('/inventory/add', methods=['GET', 'POST'])
 @login_required
@@ -111,17 +185,14 @@ def add_inventory():
             db.session.rollback()
             flash(f'Terjadi kesalahan: {str(e)}', 'danger')
             return redirect(url_for('main.add_inventory'))
-    
-    # Get existing products for the dropdown
+      # Get existing products for the dropdown
     existing_products = Inventory.query.order_by(Inventory.product_name).all()
     return render_template('inventory/form.html', existing_products=existing_products)
 
 @main.route('/inventory/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_inventory(id):
-    inventory = Inventory.query.get_or_404(id)
-    
-    if request.method == 'POST':
+    inventory = Inventory.query.get_or_404(id)    if request.method == 'POST':
         try:
             # Validate that selling price is not less than purchase price
             purchase_price = request.form.get('purchase_price', type=float)

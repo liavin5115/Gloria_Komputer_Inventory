@@ -53,7 +53,10 @@ def add_restock():
         db.session.commit()
         flash('Restock item added successfully!', 'success')
         return redirect(url_for('restock.restock_list'))
-    return render_template('restock/form.html', item=None)
+    
+    # Get all inventory items for the product selection
+    inventory_items = Inventory.query.order_by(Inventory.product_name).all()
+    return render_template('restock/form.html', inventory_items=inventory_items, item=None)
 
 @restock.route('/restock/<int:id>/receive', methods=['POST'])
 def receive_restock(id):

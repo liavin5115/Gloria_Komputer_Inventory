@@ -86,16 +86,15 @@
                         <td data-order="{{ item.selling_price }}">Rp. {{ "{:,.2f}".format(item.selling_price) }}</td>
                         <td data-order="{{ (item.selling_price - item.purchase_price) / item.purchase_price * 100 }}">
                             {{ "{:.1f}%".format((item.selling_price - item.purchase_price) / item.purchase_price * 100) }}</td>
-                        <td>
-                            <div class="btn-group">
-                                <a href="{{ url_for('main.edit_inventory', id=item.id) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-pencil"></i>
+                        <td>                            <div class="btn-group">
+                                <a href="{{ url_for('main.edit_inventory', id=item.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil-square"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-outline-warning" onclick="showOutStockModal({{ item.id }}, '{{ item.product_name }}', {{ item.quantity }})">
-                                    <i class="bi bi-box-arrow-down"></i>
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="showStockModal({{ item.id }}, '{{ item.product_name }}', {{ item.quantity }}, {{ item.purchase_price }}, {{ item.selling_price }})" title="Stock Movement">
+                                    <i class="bi bi-box-arrow-in-right"></i>
                                 </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteItem({{ item.id }})">
-                                    <i class="bi bi-trash"></i>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteItem({{ item.id }})" title="Delete">
+                                    <i class="bi bi-trash3-fill"></i>
                                 </button>
                             </div>
                         </td>
@@ -107,37 +106,129 @@
     </div>
 </div>
 
-<!-- Out Stock Modal -->
-<div class="modal fade" id="outStockModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Stock Out - <span id="productName"></span></h5>
+<!-- Stock Movement Modal -->
+<div class="modal fade" id="stockModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="bi bi-box-arrow-in-right me-2"></i>Pergerakan Stock</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="outStockForm">
-                    <input type="hidden" id="itemId" name="itemId">
-                    <div class="mb-3">
-                        <label for="quantity" class="form-label">Quantity</label>
-                        <input type="number" class="form-control" id="quantity" name="quantity" required min="1">
-                        <div class="form-text">Current stock: <span id="currentStock"></span></div>
+                <form id="stockForm" class="needs-validation" novalidate>
+                    <input type="hidden" id="itemId">
+                    
+                    <!-- Product Information Card -->
+                    <div class="card bg-secondary mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6 class="card-subtitle mb-2 text-light">Informasi Produk</h6>
+                                    <div class="mb-2">
+                                        <small class="text-muted">Nama Produk:</small>
+                                        <div id="productName" class="form-control-plaintext text-white fs-5"></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="text-md-end">
+                                        <small class="text-muted">Stock Saat Ini:</small>
+                                        <div id="currentStock" class="form-control-plaintext text-white fs-4"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="reference" class="form-label">Reference</label>
-                        <input type="text" class="form-control" id="reference" name="reference" 
-                               placeholder="e.g., Sales Invoice #, Customer Name">
+
+                    <!-- Movement Type Selection -->
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card bg-secondary h-100">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-3 text-light">Jenis Pergerakan</h6>
+                                    <div class="d-flex gap-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="moveType" id="moveIn" value="in" required>
+                                            <label class="form-check-label" for="moveIn">
+                                                <i class="bi bi-box-arrow-in-down text-success me-1"></i>Stock Masuk
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="moveType" id="moveOut" value="out">
+                                            <label class="form-check-label" for="moveOut">
+                                                <i class="bi bi-box-arrow-up text-danger me-1"></i>Stock Keluar
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card bg-secondary h-100">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-3 text-light">Referensi</h6>
+                                    <input type="text" class="form-control" id="reference" placeholder="No. Invoice / No. PO / dll">
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="2"
-                                 placeholder="Additional notes about this stock out"></textarea>
+
+                    <div class="row g-4 mt-2">
+                        <div class="col-md-6">
+                            <!-- Quantity Input -->
+                            <div class="card bg-secondary">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-3 text-light">Jumlah</h6>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="quantity" min="1" required>
+                                        <span class="input-group-text">unit</span>
+                                    </div>
+                                    <div id="quantityFeedback" class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <!-- Price Input -->
+                            <div class="card bg-secondary">
+                                <div class="card-body">
+                                    <h6 class="card-subtitle mb-3 text-light" id="priceLabel">Harga per Unit</h6>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Rp</span>
+                                        <input type="number" class="form-control" id="unitPrice" min="0" step="1000" required>
+                                    </div>
+                                    <div id="priceFeedback" class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Amount Card -->
+                    <div class="card bg-secondary mt-4">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <h6 class="card-subtitle mb-2 text-light">Total Harga</h6>
+                                    <div id="totalPrice" class="text-white fw-bold fs-4">Rp 0</div>
+                                    <small id="priceBreakdown" class="text-muted"></small>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <textarea class="form-control bg-dark text-white" id="notes" style="height: 80px" placeholder="Catatan"></textarea>
+                                        <label for="notes" class="text-muted">Catatan (opsional)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitOutStock()">Submit</button>
+            </div>            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-outline-secondary hover-lift" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Batal
+                </button>
+                <button type="button" class="btn btn-success hover-lift" onclick="submitStockMovement()">
+                    <i class="bi bi-check-circle me-2"></i>Simpan
+                </button>
             </div>
         </div>
     </div>
@@ -256,54 +347,170 @@ function deleteItem(id) {
     }
 }
 
-function showOutStockModal(id, productName, currentQty) {
+let currentItem = null;
+
+function showStockModal(id, productName, currentQty, purchasePrice, sellingPrice) {
+    currentItem = {
+        id: id,
+        productName: productName,
+        currentQty: currentQty,
+        purchasePrice: purchasePrice,
+        sellingPrice: sellingPrice
+    };
+    
     document.getElementById('itemId').value = id;
     document.getElementById('productName').textContent = productName;
     document.getElementById('currentStock').textContent = currentQty;
-    document.getElementById('quantity').max = currentQty;
+    document.getElementById('quantity').value = '';
+    document.getElementById('notes').value = '';
+    document.getElementById('unitPrice').value = '';
+    document.getElementById('totalPrice').textContent = 'Rp 0';
     
-    // Reset form
-    document.getElementById('outStockForm').reset();
+    // Reset radio buttons
+    document.querySelectorAll('input[name="moveType"]').forEach(radio => radio.checked = false);
     
-    // Show modal
-    new bootstrap.Modal(document.getElementById('outStockModal')).show();
+    const modal = new bootstrap.Modal(document.getElementById('stockModal'));
+    modal.show();
 }
 
-function submitOutStock() {
-    const form = document.getElementById('outStockForm');
-    const itemId = document.getElementById('itemId').value;
-    const quantity = document.getElementById('quantity').value;
-    const reference = document.getElementById('reference').value;
-    const notes = document.getElementById('notes').value;
+function formatRupiah(amount) {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(amount);
+}
 
-    if (!quantity || quantity <= 0) {
-        alert('Please enter a valid quantity');
+function calculateTotal() {
+    const quantity = parseInt(document.getElementById('quantity').value) || 0;
+    const unitPrice = parseFloat(document.getElementById('unitPrice').value) || 0;
+    const total = quantity * unitPrice;
+    
+    // Update total price display
+    document.getElementById('totalPrice').textContent = formatRupiah(total);
+    
+    // Show price breakdown
+    if (quantity > 0 && unitPrice > 0) {
+        document.getElementById('priceBreakdown').textContent = 
+            `${quantity} unit × ${formatRupiah(unitPrice)} = ${formatRupiah(total)}`;
+    } else {
+        document.getElementById('priceBreakdown').textContent = '';
+    }
+    
+    // Validate quantity
+    const quantityInput = document.getElementById('quantity');
+    const quantityFeedback = document.getElementById('quantityFeedback');
+    const moveType = document.querySelector('input[name="moveType"]:checked')?.value;
+    
+    if (moveType === 'out' && quantity > currentItem.currentQty) {
+        quantityInput.classList.add('is-invalid');
+        quantityFeedback.textContent = 'Jumlah melebihi stock yang tersedia';
+        return false;
+    } else if (quantity <= 0) {
+        quantityInput.classList.add('is-invalid');
+        quantityFeedback.textContent = 'Jumlah harus lebih dari 0';
+        return false;
+    } else {
+        quantityInput.classList.remove('is-invalid');
+    }
+    
+    // Validate price
+    const unitPriceInput = document.getElementById('unitPrice');
+    const priceFeedback = document.getElementById('priceFeedback');
+    
+    if (unitPrice <= 0) {
+        unitPriceInput.classList.add('is-invalid');
+        priceFeedback.textContent = 'Harga harus lebih dari 0';
+        return false;
+    } else {
+        unitPriceInput.classList.remove('is-invalid');
+    }
+    
+    return true;
+}
+
+function submitStockMovement() {
+    const form = document.getElementById('stockForm');
+    form.classList.add('was-validated');
+
+    const moveType = document.querySelector('input[name="moveType"]:checked')?.value;
+    if (!moveType) {
+        alert('Pilih jenis pergerakan stock!');
         return;
     }
 
-    fetch(`/inventory/${itemId}/stock-out`, {
+    if (!calculateTotal() || !form.checkValidity()) {
+        return; // Stop if validation fails
+    }
+
+    const quantity = parseInt(document.getElementById('quantity').value);
+    const unitPrice = parseFloat(document.getElementById('unitPrice').value);
+    const reference = document.getElementById('reference').value;
+    
+    // Add data to send
+    const data = {
+        type: moveType,
+        quantity: quantity,
+        notes: document.getElementById('notes').value,
+        reference: reference,
+        unit_price: unitPrice
+    };
+
+    fetch(`/history/add`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            quantity: parseInt(quantity),
-            reference: reference,
-            notes: notes
+            inventory_id: currentItem.id,
+            ...data
         })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.error) {
-            alert(data.error);
+        if (data.success) {
+            location.reload();
         } else {
-            window.location.reload();
+            alert(data.message || 'Terjadi kesalahan');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while processing the request');
+        alert('Terjadi kesalahan');
     });
 }
+
+// Event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    // Listen for changes to quantity and unit price
+    const quantityInput = document.getElementById('quantity');
+    const unitPriceInput = document.getElementById('unitPrice');
+    
+    [quantityInput, unitPriceInput].forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            calculateTotal();
+        });
+    });
+
+    // Update unit price when movement type changes
+    document.querySelectorAll('input[name="moveType"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const unitPriceInput = document.getElementById('unitPrice');
+            const priceLabel = document.getElementById('priceLabel');
+            
+            if (this.value === 'in') {
+                priceLabel.textContent = 'Harga Beli per Unit:';
+                unitPriceInput.value = currentItem.purchasePrice;
+            } else {
+                priceLabel.textContent = 'Harga Jual per Unit:';
+                unitPriceInput.value = currentItem.sellingPrice;
+            }
+            
+            calculateTotal();
+        });
+    });
+});
 </script>
 {% endblock %}
