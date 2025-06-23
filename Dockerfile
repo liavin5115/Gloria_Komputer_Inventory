@@ -35,11 +35,7 @@ RUN mkdir -p /app/instance /data \
 COPY . .
 
 # Set execute permissions for scripts
-RUN chmod +x /app/start.sh \
-    && chmod +x /app/docker-healthcheck.py
-
-# Switch to non-root user (optional, comment out if you need root)
-# USER nobody
+RUN chmod +x /app/start.sh
 
 # Healthcheck configuration
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD ["python", "docker-healthcheck.py"]

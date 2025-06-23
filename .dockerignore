@@ -13,5 +13,5 @@ instance/
 .idea/
 .vscode/
 *.md
-Dockerfile
-docker-compose.yml
+.DS_Store
+Thumbs.db

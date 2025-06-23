@@ -12,7 +12,6 @@ services:
       - PYTHONUNBUFFERED=1
       - DATABASE_URL=/data/inventory.db
       - SECRET_KEY=change-this-in-production
-      - SECRET_KEY=change-this-in-production
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "docker-healthcheck.py"]
