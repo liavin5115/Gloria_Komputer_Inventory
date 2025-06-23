@@ -19,3 +19,4 @@ services:
       retries: 3
     volumes:
       - ./data:/data
+      - ./data:/data
