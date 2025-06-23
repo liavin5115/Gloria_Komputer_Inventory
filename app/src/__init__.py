@@ -5,6 +5,11 @@ from flask_migrate import Migrate
 from datetime import datetime
 import pytz
 import os
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def get_jakarta_time():
     """Get current time in Jakarta timezone (UTC+7)"""
@@ -24,6 +29,16 @@ def utc_to_local(utc_dt):
     jakarta_tz = pytz.timezone('Asia/Jakarta')
     return utc_dt.astimezone(jakarta_tz)
 
+def init_database(app):
+    """Initialize database with proper error handling"""
+    try:
+        with app.app_context():
+            db.create_all()
+            logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {str(e)}")
+        raise
+
 def create_app():
     app = Flask(__name__)
     
@@ -35,17 +50,23 @@ def create_app():
     @app.errorhandler(500)
     def internal_error(error):
         db.session.rollback()  # Roll back db session in case of error
-        app.logger.error(f'Server Error: {error}', exc_info=True)
+        logger.error(f'Server Error: {error}', exc_info=True)
         return render_template('errors/500.html'), 500
     
     # Configuration
-    app.config['SECRET_KEY'] = 'your-secret-key'  # Change this in production
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
     
     # Set database path from environment variable or default
     db_path = os.environ.get('DATABASE_URL', '/data/inventory.db')
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    data_dir = os.path.dirname(db_path)
     
-    print(f"Using database at: {db_path}")
+    try:
+        os.makedirs(data_dir, exist_ok=True)
+        logger.info(f"Using database at: {db_path}")
+    except Exception as e:
+        logger.error(f"Failed to create database directory: {str(e)}")
+        raise
+
     app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
@@ -57,13 +78,8 @@ def create_app():
     login_manager.login_message = 'Silakan login untuk mengakses halaman ini'
     login_manager.login_message_category = 'warning'
     
-    try:
-        with app.app_context():
-            db.create_all()
-            print("Database tables created successfully")
-    except Exception as e:
-        print(f"Error initializing database: {e}")
-        
+    init_database(app)
+    
     @login_manager.user_loader
     def load_user(id):
         from app.src.models.user import User

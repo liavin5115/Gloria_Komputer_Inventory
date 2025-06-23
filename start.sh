@@ -6,20 +6,10 @@ mkdir -p /data
 chmod 777 /data
 
 echo "Initializing database..."
-python <<EOF
-from app.src import create_app, db
-from app.src.models.inventory import Inventory
-
-app = create_app()
-
-with app.app_context():
-    try:
-        db.create_all()
-        print("Database tables created")
-    except Exception as e:
-        print(f"Database initialization error: {e}")
-        print("Will continue anyway to allow for database setup...")
-EOF
+python init_db.py || {
+    echo "Database initialization failed"
+    exit 1
+}
 
 echo "Starting Gunicorn..."
 exec gunicorn \
