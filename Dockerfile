@@ -1,44 +1,31 @@
-# Use Python 3.11 slim image
+# Use official Python image
 FROM python:3.11-slim
 
-# Set working directory
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set work directory
 WORKDIR /app
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    FLASK_APP=run.py \
-    FLASK_ENV=production \
-    GUNICORN_WORKERS=4 \
-    GUNICORN_THREADS=2 \
-    GUNICORN_TIMEOUT=120 \
-    GUNICORN_BIND=0.0.0.0:5000
-
 # Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-    gcc \
-    curl \
-    sqlite3 \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Copy requirements and install
 COPY app/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install gunicorn
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Create app directory and set permissions
-RUN mkdir -p /app/instance /data \
-    && chmod -R 777 /app/instance /data
-
-# Copy application files
+# Copy project files
 COPY . .
 
-# Set execute permissions for scripts
-RUN chmod +x /app/start.sh
+# Create /data directory for persistent storage (Railway best practice)
+RUN mkdir -p /data
 
-# Healthcheck configuration
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD ["python", "docker-healthcheck.py"]
+# Expose port 5000
+EXPOSE 5000
 
-# Run with startup script
-CMD ["/app/start.sh"]
+# Set environment variable for database path (Railway will mount /data)
+ENV DATABASE_URL=/data/inventory.db
+
+# Start the app with Gunicorn
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "wsgi:app"]
