@@ -28,23 +28,21 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && pip install gunicorn
 
 # Create app directory and set permissions
-RUN mkdir -p /app/instance && \
-    chown -R nobody:nogroup /app && \
-    chmod -R 777 /app/instance
+RUN mkdir -p /app/instance /data \
+    && chmod -R 777 /app/instance /data
 
 # Copy application files
-COPY --chown=nobody:nobody . .
+COPY . .
 
 # Set execute permissions for scripts
-RUN chmod +x /app/start.sh && \
-    chmod +x /app/docker-healthcheck.py
+RUN chmod +x /app/start.sh \
+    && chmod +x /app/docker-healthcheck.py
 
-# Switch to non-root user
-USER nobody
+# Switch to non-root user (optional, comment out if you need root)
+# USER nobody
 
 # Healthcheck configuration
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python docker-healthcheck.py
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD ["python", "docker-healthcheck.py"]
 
 # Run with startup script
 CMD ["/app/start.sh"]
