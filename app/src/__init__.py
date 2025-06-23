@@ -86,18 +86,9 @@ def create_app():
         return User.query.get(int(id))
     
     with app.app_context():
-        # Import blueprints
-        from app.src.routes.main import main
-        from app.src.routes.restock import restock
-        from app.src.routes.history import history
-        from app.src.routes.auth import auth
-        from app.src.routes.statistics import statistics  # Add this line
-
-        # Register blueprints
-        app.register_blueprint(main)
-        app.register_blueprint(restock)
-        app.register_blueprint(history)
-        app.register_blueprint(auth)
-        app.register_blueprint(statistics)  # Add this line
-    
+        # Import all blueprints from routes
+        from app.src.routes import __all__ as blueprint_names
+        from app.src import routes
+        for name in blueprint_names:
+            app.register_blueprint(getattr(routes, name))
     return app
