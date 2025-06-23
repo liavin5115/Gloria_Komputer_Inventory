@@ -2,8 +2,8 @@
 set -e
 
 echo "Checking database directory..."
-mkdir -p /app/instance
-chmod 777 /app/instance
+mkdir -p /data
+chmod 777 /data
 
 echo "Initializing database..."
 python <<EOF

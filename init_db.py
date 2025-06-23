@@ -2,6 +2,12 @@ from app.src import create_app, db
 from app.src.models.inventory import Inventory
 from app.src.models.user import User
 import random
+import os
+
+# Ensure /data directory exists if using Railway volume
+db_path = os.environ.get('DATABASE_URL', '/data/inventory.db')
+data_dir = os.path.dirname(db_path)
+os.makedirs(data_dir, exist_ok=True)
 
 def init_db():
     app = create_app()
@@ -19,7 +25,7 @@ def init_db():
                     role='admin',
                     is_active=True
                 )
-                admin.set_password('admin123')  # Change this in production!
+                admin.set_password('Admin123!')  # Meets all password policy requirements
                 db.session.add(admin)
                 db.session.commit()
                 print("Created default admin user (username: admin)")

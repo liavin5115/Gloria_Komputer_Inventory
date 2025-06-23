@@ -41,8 +41,8 @@ def create_app():
     # Configuration
     app.config['SECRET_KEY'] = 'your-secret-key'  # Change this in production
     
-    # Set database path
-    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'instance', 'inventory.db')
+    # Set database path from environment variable or default
+    db_path = os.environ.get('DATABASE_URL', '/data/inventory.db')
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
     
     print(f"Using database at: {db_path}")
