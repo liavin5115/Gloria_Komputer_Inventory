@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section d-flex align-items-center justify-content-center text-center position-relative" style="min-height: 70vh; overflow: hidden; background: #0a0a1a;">
+    <canvas id="spaceBg" class="position-absolute top-0 start-0 w-100 h-100" style="z-index:0;"></canvas>
+    <div class="container position-relative z-2 py-5">
+        <h1 class="display-3 fw-bold mb-3 text-white">Your Ultimate Tech Store</h1>
+        <p class="lead mb-4 text-light">Laptops, Desktops, Accessories – All in One Place</p>
+        <a href="#products" class="btn btn-primary btn-lg px-4 shadow-lg hero-btn">Shop Now <i class="bi bi-arrow-right ms-2"></i></a>
+    </div>
+</section>
+
+<!-- Featured Products Carousel -->
+<section class="container py-5">
+    <h2 class="fw-bold text-center mb-4">Featured Products</h2>
+    <div id="featuredCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for p in featured_products %}
+            <div class="carousel-item{% if loop.index0 == 0 %} active{% endif %}">
+                <div class="d-flex flex-column flex-md-row align-items-center justify-content-center gap-4 p-4">
+                    <img src="{{ url_for('static', filename='uploads/' ~ (p.photo if p.photo else 'no-image.png')) }}" alt="{{ p.product_name }}" class="rounded shadow-lg" style="width: 220px; height: 220px; object-fit: cover; background: #222;">
+                    <div class="text-start">
+                        <h3 class="fw-bold mb-2">{{ p.product_name }}</h3>
+                        <p class="mb-3 text-muted">{{ p.description or '' }}</p>
+                        <div class="h5 fw-bold text-primary mb-3">Rp{{ '{:,.0f}'.format(p.selling_price) }}</div>
+                        <a href="#products" class="btn btn-outline-primary btn-lg">Buy Now</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+</section>
+
+<!-- Category Filter Bar -->
+<section class="container mb-4">
+    <div class="d-flex flex-wrap justify-content-center gap-2" id="categoryFilterBar">
+        <button class="btn btn-outline-primary active" data-category="all">All</button>
+        {% for cat in categories %}
+        <button class="btn btn-outline-primary" data-category="{{ cat }}">{{ cat }}</button>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Products Grid -->
+<section class="container pb-5" id="products">
+    <h2 class="fw-bold text-center mb-4">Our Products</h2>
+    <div class="row g-4" id="productsGrid">
+        {% for p in all_products %}
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3 product-card-item" data-category="{{ p.category }}">
+            <div class="card h-100 shadow-sm product-card">
+                <img src="{{ url_for('static', filename='uploads/' ~ (p.photo if p.photo else 'no-image.png')) }}" alt="{{ p.product_name }}" class="card-img-top" style="height: 180px; object-fit: cover; background: #222;">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title fw-bold">{{ p.product_name }}</h5>
+                    <p class="card-text text-muted small mb-2">{{ p.description or '' }}</p>
+                    <div class="mt-auto">
+                        <div class="h6 fw-bold text-primary mb-2">Rp{{ '{:,.0f}'.format(p.selling_price) }}</div>
+                        <button class="btn btn-success w-100 add-to-cart-btn" data-product-id="{{ p.id }}"><i class="bi bi-cart-plus me-2"></i>Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% if all_products|length == 0 %}
+        <div class="col-12 text-center text-muted">No products found.</div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Testimonials Section (optional) -->
+<section class="container py-5">
+    <h2 class="fw-bold text-center mb-4">What Our Customers Say</h2>
+    <div class="row justify-content-center g-4" id="testimonialsSection">
+        {% for t in testimonials %}
+        <div class="col-md-4">
+            <div class="card bg-dark border-0 shadow-sm h-100 p-4">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-person-circle display-5 text-primary me-3"></i>
+                    <div>
+                        <h6 class="fw-bold mb-0">{{ t.name }}</h6>
+                        <div class="text-warning">
+                            {{ '★' * t.rating }}{{ '☆' * (5 - t.rating) }}
+                        </div>
+                    </div>
+                </div>
+                <p class="mb-0 text-muted">"{{ t.review }}"</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="container py-5">
+    <h2 class="fw-bold text-center mb-4">Why Choose Us?</h2>
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-4">
+            <div class="card bg-dark border-0 shadow-sm h-100 text-center p-4">
+                <i class="bi bi-truck display-4 text-primary mb-3"></i>
+                <h5 class="fw-bold mb-2">Free Shipping</h5>
+                <p class="text-muted">Enjoy free shipping on all orders, no minimum purchase required.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-0 shadow-sm h-100 text-center p-4">
+                <i class="bi bi-headset display-4 text-primary mb-3"></i>
+                <h5 class="fw-bold mb-2">24/7 Support</h5>
+                <p class="text-muted">Our team is ready to help you anytime, anywhere.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-0 shadow-sm h-100 text-center p-4">
+                <i class="bi bi-people display-4 text-primary mb-3"></i>
+                <h5 class="fw-bold mb-2">Trusted by Thousands</h5>
+                <p class="text-muted">Thousands of happy customers trust us for their tech needs.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sticky Checkout Button -->
+<button id="checkoutBtn" class="btn btn-success btn-lg shadow-lg position-fixed" style="bottom: 32px; right: 32px; z-index: 1050; display: none;">
+    <i class="bi bi-cart3 me-2"></i>Checkout (<span id="cartCount">0</span>)
+</button>
+
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// --- Animated Space Background ---
+const spaceCanvas = document.getElementById('spaceBg');
+if (spaceCanvas) {
+    const ctx = spaceCanvas.getContext('2d');
+    let stars = [], shootingStars = [], planets = [];
+    function resizeSpace() {
+        spaceCanvas.width = window.innerWidth;
+        spaceCanvas.height = document.querySelector('.hero-section').offsetHeight;
+    }
+    function createStars() {
+        stars = [];
+        for (let i = 0; i < 120; i++) {
+            stars.push({
+                x: Math.random() * spaceCanvas.width,
+                y: Math.random() * spaceCanvas.height,
+                r: Math.random() * 1.2 + 0.3,
+                alpha: Math.random() * 0.5 + 0.5,
+                speed: Math.random() * 0.15 + 0.05
+            });
+        }
+    }
+    function createPlanets() {
+        planets = [
+            { x: spaceCanvas.width * 0.15, y: spaceCanvas.height * 0.8, r: 38, color: '#2e3a8c', glow: '#6f8cff' },
+            { x: spaceCanvas.width * 0.8, y: spaceCanvas.height * 0.2, r: 22, color: '#e0aaff', glow: '#fff0fa' }
+        ];
+    }
+    function createShootingStars() {
+        if (shootingStars.length < 2 && Math.random() < 0.01) {
+            shootingStars.push({
+                x: Math.random() * spaceCanvas.width,
+                y: Math.random() * spaceCanvas.height * 0.5,
+                len: Math.random() * 80 + 80,
+                speed: Math.random() * 6 + 6,
+                alpha: 1.0,
+                angle: Math.PI / 4 + Math.random() * Math.PI / 8
+            });
+        }
+    }
+    function drawSpace() {
+        ctx.clearRect(0, 0, spaceCanvas.width, spaceCanvas.height);
+        // Draw planets
+        planets.forEach(p => {
+            let grad = ctx.createRadialGradient(p.x, p.y, p.r * 0.5, p.x, p.y, p.r);
+            grad.addColorStop(0, p.color);
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.save();
+            ctx.globalAlpha = 0.7;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, 2 * Math.PI);
+            ctx.fillStyle = grad;
+            ctx.shadowColor = p.glow;
+            ctx.shadowBlur = 32;
+            ctx.fill();
+            ctx.restore();
+        });
+        // Draw stars
+        for (let s of stars) {
+            ctx.save();
+            ctx.globalAlpha = s.alpha;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, 2 * Math.PI);
+            ctx.fillStyle = '#fff';
+            ctx.shadowColor = '#fff';
+            ctx.shadowBlur = 8;
+            ctx.fill();
+            ctx.restore();
+            s.alpha += (Math.random() - 0.5) * 0.01;
+            s.alpha = Math.max(0.3, Math.min(1, s.alpha));
+        }
+        // Draw shooting stars
+        for (let i = shootingStars.length - 1; i >= 0; i--) {
+            let s = shootingStars[i];
+            ctx.save();
+            ctx.globalAlpha = s.alpha;
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.shadowColor = '#fff';
+            ctx.shadowBlur = 12;
+            ctx.beginPath();
+            ctx.moveTo(s.x, s.y);
+            ctx.lineTo(s.x - Math.cos(s.angle) * s.len, s.y - Math.sin(s.angle) * s.len);
+            ctx.stroke();
+            ctx.restore();
+            s.x += Math.cos(s.angle) * s.speed;
+            s.y += Math.sin(s.angle) * s.speed;
+            s.alpha -= 0.02;
+            if (s.alpha <= 0) shootingStars.splice(i, 1);
+        }
+    }
+    function animateSpace() {
+        createShootingStars();
+        drawSpace();
+        requestAnimationFrame(animateSpace);
+    }
+    window.addEventListener('resize', () => {
+        resizeSpace();
+        createStars();
+        createPlanets();
+    });
+    resizeSpace();
+    createStars();
+    createPlanets();
+    animateSpace();
+}
+
+// --- Category Filter (Jinja2 version) ---
+document.getElementById('categoryFilterBar').addEventListener('click', function(e) {
+    if (e.target.tagName === 'BUTTON') {
+        document.querySelectorAll('#categoryFilterBar button').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+        const cat = e.target.getAttribute('data-category');
+        document.querySelectorAll('.product-card-item').forEach(card => {
+            if (cat === 'all' || card.getAttribute('data-category') === cat) {
+                card.style.display = '';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+});
+
+// --- Add to Cart & Sticky Checkout Button ---
+function updateCartCount() {
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    document.getElementById('cartCount').textContent = cart.length;
+    document.getElementById('checkoutBtn').style.display = cart.length > 0 ? 'block' : 'none';
+}
+
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('add-to-cart-btn')) {
+        const productId = e.target.getAttribute('data-product-id');
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        if (!cart.find(item => item.id == productId)) {
+            // Find product data from DOM (or fetch from backend if needed)
+            const card = e.target.closest('.product-card-item');
+            const name = card.querySelector('.card-title').textContent;
+            const price = card.querySelector('.h6').textContent.replace(/[^\d]/g, '');
+            const image = card.querySelector('img').src;
+            cart.push({ id: productId, name, price, image });
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartCount();
+            e.target.classList.add('btn-success');
+            e.target.classList.remove('btn-outline-success');
+            e.target.innerHTML = '<i class="bi bi-check2-circle me-2"></i>Added';
+            setTimeout(() => {
+                e.target.innerHTML = '<i class="bi bi-cart-plus me-2"></i>Add to Cart';
+            }, 1200);
+        }
+    }
+});
+
+document.getElementById('checkoutBtn').addEventListener('click', function() {
+    window.location.href = '/checkout';
+});
+
+updateCartCount();
+
+// --- Animations on Scroll ---
+function animateOnScroll() {
+    const elements = document.querySelectorAll('.fade-in, .product-card');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('show');
+            }
+        });
+    }, { threshold: 0.1 });
+    elements.forEach(el => observer.observe(el));
+}
+document.addEventListener('DOMContentLoaded', animateOnScroll);
+</script>
+<style>
+.hero-section { position: relative; min-height: 70vh; background: #0a0a1a; }
+.hero-section canvas { z-index: 0; }
+.hero-btn { font-size: 1.2rem; transition: background 0.2s, box-shadow 0.2s; }
+.hero-btn:hover { background: #0d6efd; color: #fff; box-shadow: 0 4px 24px rgba(13,110,253,0.2); }
+.carousel-item img { box-shadow: 0 2px 16px rgba(0,0,0,0.12); }
+.product-card { transition: transform 0.2s, box-shadow 0.2s; }
+.product-card:hover { transform: translateY(-6px) scale(1.03); box-shadow: 0 8px 32px rgba(13,110,253,0.08); }
+#checkoutBtn { transition: box-shadow 0.2s, background 0.2s; }
+#checkoutBtn:hover { background: #198754; box-shadow: 0 4px 24px rgba(25,135,84,0.2); }
+.fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.7s, transform 0.7s; }
+.fade-in.show, .product-card.show { opacity: 1; transform: none; }
+@media (max-width: 767px) {
+    .hero-section { min-height: 50vh; }
+    .carousel-item img { width: 140px !important; height: 140px !important; }
+}
+</style>
+{% endblock %}

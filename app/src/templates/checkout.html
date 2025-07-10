@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="fw-bold mb-4">Checkout Keranjang</h2>
+    <div class="row">
+        <div class="col-lg-7 mb-4 mb-lg-0">
+            <div class="card bg-dark text-light">
+                <div class="card-header"><b>Daftar Belanja</b></div>
+                <div class="card-body p-0">
+                    <div id="cartTableContainer"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card bg-dark text-light">
+                <div class="card-header"><b>Data Pembeli</b></div>
+                <div class="card-body">
+                    <form id="checkoutForm">
+                        <div class="mb-2">
+                            <label class="form-label">Nama</label>
+                            <input type="text" class="form-control" id="buyer_name" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Alamat</label>
+                            <textarea class="form-control" id="buyer_address" rows="2" required></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Catatan (opsional)</label>
+                            <textarea class="form-control" id="buyer_note" rows="2"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Total Harga</label>
+                            <input type="text" class="form-control" id="total_price" readonly>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100"><i class="bi bi-whatsapp me-1"></i>Kirim ke WhatsApp</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Helper: format rupiah
+function formatRupiah(num) {
+    return 'Rp' + Number(num).toLocaleString('id-ID');
+}
+
+// Render cart table
+function renderCartTable() {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    let html = '';
+    if (cart.length === 0) {
+        html = '<div class="p-4 text-center text-muted">Keranjang kosong.</div>';
+        document.getElementById('total_price').value = formatRupiah(0);
+    } else {
+        html = `<div class='table-responsive'><table class='table table-dark table-striped mb-0'><thead><tr><th>Produk</th><th>Harga</th><th>Qty</th><th>Subtotal</th><th></th></tr></thead><tbody>`;
+        let total = 0;
+        cart.forEach((item, idx) => {
+            const subtotal = item.price * item.qty;
+            total += subtotal;
+            html += `<tr><td>${item.name}</td><td>${formatRupiah(item.price)}</td><td><input type='number' min='1' value='${item.qty}' data-idx='${idx}' class='form-control form-control-sm cart-qty' style='width:70px;'></td><td>${formatRupiah(subtotal)}</td><td><button class='btn btn-danger btn-sm remove-item' data-idx='${idx}'><i class='bi bi-trash'></i></button></td></tr>`;
+        });
+        html += `</tbody></table></div><div class='p-3 text-end'><b>Total: <span id='cartTotal'>${formatRupiah(total)}</span></b></div>`;
+        document.getElementById('total_price').value = formatRupiah(total);
+    }
+    document.getElementById('cartTableContainer').innerHTML = html;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    renderCartTable();
+    // Update qty
+    document.getElementById('cartTableContainer').addEventListener('input', function(e) {
+        if (e.target.classList.contains('cart-qty')) {
+            const idx = e.target.dataset.idx;
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            cart[idx].qty = Math.max(1, parseInt(e.target.value));
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCartTable();
+        }
+    });
+    // Remove item
+    document.getElementById('cartTableContainer').addEventListener('click', function(e) {
+        if (e.target.closest('.remove-item')) {
+            const idx = e.target.closest('.remove-item').dataset.idx;
+            let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            cart.splice(idx, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCartTable();
+        }
+    });
+    // Handle checkout form
+    document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        if (cart.length === 0) {
+            alert('Keranjang kosong!');
+            return;
+        }
+        const name = document.getElementById('buyer_name').value;
+        const address = document.getElementById('buyer_address').value;
+        const note = document.getElementById('buyer_note').value;
+        let message = `Halo, saya ingin memesan produk berikut:%0A`;
+        cart.forEach((item, i) => {
+            message += `\n${i+1}. ${item.name} (x${item.qty}) - ${formatRupiah(item.price)} = ${formatRupiah(item.price*item.qty)}`;
+        });
+        const total = cart.reduce((sum, item) => sum + item.price*item.qty, 0);
+        message += `\n\nTotal: ${formatRupiah(total)}`;
+        message += `\n\n*Data Pemesan*\nNama: ${name}\nAlamat: ${address}`;
+        if(note) message += `\nCatatan: ${note}`;
+        const waUrl = `https://wa.me/6285751756761?text=${encodeURIComponent(message)}`;
+        window.open(waUrl, '_blank');
+    });
+});
+</script>
+{% endblock %}

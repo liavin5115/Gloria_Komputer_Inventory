@@ -9,6 +9,7 @@ class Inventory(db.Model):
     purchase_price = db.Column(db.Float, nullable=False, default=0.0)  # Add default
     selling_price = db.Column(db.Float, nullable=False, default=0.0)  # Add default
     category = db.Column(db.String(50))
+    photo = db.Column(db.String(255))  # Path or filename for product photo
     created_at = db.Column(db.DateTime, default=get_jakarta_time)
     updated_at = db.Column(db.DateTime, default=get_jakarta_time, onupdate=get_jakarta_time)
 

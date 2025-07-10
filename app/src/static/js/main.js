@@ -112,4 +112,75 @@ document.addEventListener('DOMContentLoaded', function() {    // Animate counter
             }
         });
     });
+
+    // Particle effect for hero (simple animated dots)
+    // Animate CTA icon
+    const ctaBtn = document.querySelector('.hero-btn');
+    if (ctaBtn) {
+        ctaBtn.addEventListener('mouseenter', function() {
+            const icon = ctaBtn.querySelector('.bi');
+            if (icon) icon.style.transform = 'translateX(6px)';
+        });
+        ctaBtn.addEventListener('mouseleave', function() {
+            const icon = ctaBtn.querySelector('.bi');
+            if (icon) icon.style.transform = '';
+        });
+    }
+
+    // Animate category icons
+    document.querySelectorAll('.category-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            const icon = card.querySelector('.category-icon');
+            if (icon) icon.classList.add('animate__tada');
+        });
+        card.addEventListener('mouseleave', function() {
+            const icon = card.querySelector('.category-icon');
+            if (icon) icon.classList.remove('animate__tada');
+        });
+    });
+
+    // Simple hero particles (dots)
+    const heroParticles = document.getElementById('heroParticles');
+    if (heroParticles) {
+        for (let i = 0; i < 18; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'particle-dot';
+            dot.style.left = Math.random() * 100 + '%';
+            dot.style.top = Math.random() * 100 + '%';
+            dot.style.animationDelay = (Math.random() * 2) + 's';
+            heroParticles.appendChild(dot);
+        }
+    }
+
+    // Responsive landing page hero animation and footer interaction
+
+    // Responsive hero section: adjust particles and overlay on resize
+    function adjustHero() {
+        const hero = document.querySelector('.hero-section');
+        if (!hero) return;
+        // Example: adjust overlay opacity or background size for different screens
+        const overlay = hero.querySelector('.hero-overlay');
+        if (overlay) {
+            if (window.innerWidth < 600) {
+                overlay.style.opacity = '0.7';
+            } else {
+                overlay.style.opacity = '0.5';
+            }
+        }
+    }
+    window.addEventListener('resize', adjustHero);
+    document.addEventListener('DOMContentLoaded', adjustHero);
+
+    // Animate hero CTA button on hover
+    const heroBtn = document.querySelector('.hero-btn');
+    if (heroBtn) {
+        heroBtn.addEventListener('mouseenter', () => heroBtn.classList.add('pulse'));
+        heroBtn.addEventListener('mouseleave', () => heroBtn.classList.remove('pulse'));
+    }
+
+    // Footer: enable tooltips for social icons
+    const tooltipTriggerListFooter = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerListFooter.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
 });

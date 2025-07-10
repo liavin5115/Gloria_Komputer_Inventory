@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <!-- Search and Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="search" 
+                               placeholder="Search products..." value="{{ search }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <select class="form-select" name="category" onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>
+                            {{ cat }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    {% if search or selected_category %}
+                    <a href="{{ url_for('main.products') }}" class="btn btn-secondary w-100">
+                        Clear Filters
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Checkout Button (top) -->
+    <div class="mb-3 d-flex justify-content-end">
+        <a href="{{ url_for('main.checkout') }}" class="btn btn-warning">
+            <i class="bi bi-cart-check me-1"></i>Checkout
+        </a>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row g-4">
+        {% for product in products %}
+        <div class="col-md-4">
+            <div class="card product-card h-100 hover-lift">
+                <!-- Product Image -->
+                {% if product.photo %}
+                <img src="{{ url_for('static', filename='uploads/' ~ product.photo) }}" class="card-img-top" alt="{{ product.product_name }}" style="object-fit:cover; height:220px;">
+                {% else %}
+                <img src="{{ url_for('static', filename='uploads/default.png') }}" class="card-img-top" alt="{{ product.product_name }}" style="object-fit:cover; height:220px;">
+                {% endif %}
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ product.product_name }}</h5>
+                    <p class="card-text text-muted mb-2">Kategori: {{ product.category or '-' }}</p>
+                    <p class="card-text mb-2">Stok: {{ product.quantity }}</p>
+                    <p class="card-text mb-2">Harga: Rp{{ '{:,.0f}'.format(product.selling_price) }}</p>
+                    <div class="mt-auto d-flex gap-2">
+                        <button class="btn btn-primary btn-add-cart w-100" 
+                                data-id="{{ product.id }}" 
+                                data-name="{{ product.product_name }}" 
+                                data-price="{{ product.selling_price }}" 
+                                data-photo="{{ product.photo or 'default.png' }}"
+                                data-stock="{{ product.quantity }}">
+                            <i class="bi bi-cart-plus me-1"></i>Tambah ke Keranjang
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-search display-1 text-muted mb-3"></i>
+            <h3>No products found</h3>
+            <p class="text-muted">Try adjusting your search or filter criteria</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Checkout Button (bottom) -->
+    <div class="mt-4 d-flex justify-content-end">
+        <a href="{{ url_for('main.checkout') }}" class="btn btn-warning">
+            <i class="bi bi-cart-check me-1"></i>Checkout
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Helper: format rupiah
+function formatRupiah(num) {
+    return 'Rp' + Number(num).toLocaleString('id-ID');
+}
+
+// Tambah ke keranjang
+function addToCart(product) {
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const idx = cart.findIndex(item => item.id === product.id);
+    if (idx !== -1) {
+        // Jika sudah ada, tambah qty jika stok cukup
+        if (cart[idx].qty < product.stock) {
+            cart[idx].qty += 1;
+        } else {
+            alert('Stok tidak mencukupi!');
+            return;
+        }
+    } else {
+        cart.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            photo: product.photo,
+            qty: 1,
+            stock: product.stock
+        });
+    }
+    localStorage.setItem('cart', JSON.stringify(cart));
+    updateCartBadge();
+}
+
+// Update badge/cart count
+function updateCartBadge() {
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    let count = cart.reduce((sum, item) => sum + item.qty, 0);
+    // Update badge di navbar jika ada
+    const badge = document.getElementById('cart-badge');
+    if (badge) badge.textContent = count > 0 ? count : '';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Event listener tombol tambah ke keranjang
+    document.querySelectorAll('.btn-add-cart').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const product = {
+                id: Number(this.dataset.id),
+                name: this.dataset.name,
+                price: Number(this.dataset.price),
+                photo: this.dataset.photo,
+                stock: Number(this.dataset.stock)
+            };
+            addToCart(product);
+            this.classList.add('btn-success');
+            this.classList.remove('btn-primary');
+            this.innerHTML = '<i class="bi bi-check2"></i> Ditambahkan';
+            setTimeout(() => {
+                this.classList.remove('btn-success');
+                this.classList.add('btn-primary');
+                this.innerHTML = '<i class="bi bi-cart-plus me-1"></i>Tambah ke Keranjang';
+            }, 1200);
+        });
+    });
+    updateCartBadge();
+});
+</script>
+{% endblock %}
