@@ -1,6 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
+<!-- Bulk Upload Section -->
+<div class="card mb-4 fade-in">
+    <div class="card-body">
+        <form action="{{ url_for('main.bulk_upload_inventory') }}" method="post" enctype="multipart/form-data" class="row g-3 align-items-center">
+            <div class="col-auto">
+                <label for="bulkPhotos" class="form-label mb-0 fw-bold">Bulk Upload Product Photos</label>
+            </div>
+            <div class="col-auto">
+                <input class="form-control" type="file" id="bulkPhotos" name="photos" accept="image/*" multiple required>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-success"><i class="bi bi-upload me-2"></i>Upload & Create Products</button>
+            </div>
+            <div class="col-12">
+                <small class="text-muted">Setiap foto akan dibuat produk baru dengan nama sesuai nama file (tanpa ekstensi). Jika nama produk sudah ada, file akan diabaikan.</small>
+            </div>
+        </form>
+    </div>
+</div>
 <div class="section-header mb-4 fade-in">
     <div class="d-flex justify-content-between align-items-center">
         <div>
@@ -84,8 +103,13 @@
                         </td>
                         <td data-order="{{ item.purchase_price }}">Rp. {{ "{:,.2f}".format(item.purchase_price) }}</td>
                         <td data-order="{{ item.selling_price }}">Rp. {{ "{:,.2f}".format(item.selling_price) }}</td>
-                        <td data-order="{{ (item.selling_price - item.purchase_price) / item.purchase_price * 100 }}">
-                            {{ "{:.1f}%".format((item.selling_price - item.purchase_price) / item.purchase_price * 100) }}</td>
+                        <td data-order="{{ (item.selling_price - item.purchase_price) / item.purchase_price * 100 if item.purchase_price > 0 else 0 }}">
+                            {% if item.purchase_price > 0 %}
+                                {{ "{:.1f}%".format((item.selling_price - item.purchase_price) / item.purchase_price * 100) }}
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </td>
                         <td>                            <div class="btn-group">
                                 <a href="{{ url_for('main.edit_inventory', id=item.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
                                     <i class="bi bi-pencil-square"></i>

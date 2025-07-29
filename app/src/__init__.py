@@ -57,7 +57,10 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
     
     # Set database path from environment variable or default
-    db_path = os.environ.get('DATABASE_URL', '/data/inventory.db')
+    db_path = os.environ.get(
+        'DATABASE_URL',
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'instance', 'inventory.db')
+    )
     data_dir = os.path.dirname(db_path)
     
     try:

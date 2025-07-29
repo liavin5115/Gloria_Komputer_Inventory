@@ -104,6 +104,65 @@ def test_landing_copy():
         testimonials=testimonials
     )
 
+@main.route('/inventory/bulk-upload', methods=['POST'])
+@login_required
+def bulk_upload_inventory():
+    if 'photos' not in request.files:
+        flash('Tidak ada file yang diupload.', 'danger')
+        return redirect(url_for('main.inventory'))
+    files = request.files.getlist('photos')
+    results = []
+    for file in files:
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            product_name = os.path.splitext(filename)[0]
+            # Cek duplikasi nama produk
+            existing = Inventory.query.filter_by(product_name=product_name).first()
+            if existing:
+                results.append({'filename': filename, 'status': 'duplicate'})
+                continue
+            # Hindari tabrakan nama file
+            base, ext = os.path.splitext(filename)
+            i = 1
+            save_path = os.path.join(UPLOAD_FOLDER, filename)
+            while os.path.exists(save_path):
+                filename = f"{base}_{i}{ext}"
+                save_path = os.path.join(UPLOAD_FOLDER, filename)
+                i += 1
+            try:
+                file.save(save_path)
+                inventory = Inventory(
+                    product_name=product_name,
+                    description='',
+                    quantity=0,
+                    purchase_price=0.0,
+                    selling_price=0.0,
+                    category='',
+                    photo=filename
+                )
+                db.session.add(inventory)
+                db.session.commit()
+                results.append({'filename': filename, 'status': 'success'})
+            except Exception as e:
+                db.session.rollback()
+                results.append({'filename': filename, 'status': 'error', 'error': str(e)})
+        else:
+            results.append({'filename': file.filename, 'status': 'invalid'})
+    # Kirim hasil ke frontend (flash message)
+    success = [r['filename'] for r in results if r['status'] == 'success']
+    duplicate = [r['filename'] for r in results if r['status'] == 'duplicate']
+    invalid = [r['filename'] for r in results if r['status'] == 'invalid']
+    error = [r for r in results if r['status'] == 'error']
+    if success:
+        flash(f"Berhasil upload & buat produk: {', '.join(success)}", 'success')
+    if duplicate:
+        flash(f"Duplikat nama produk (tidak ditambah): {', '.join(duplicate)}", 'warning')
+    if invalid:
+        flash(f"File tidak valid: {', '.join(invalid)}", 'danger')
+    if error:
+        flash(f"Gagal upload: {', '.join([e['filename']+': '+e['error'] for e in error])}", 'danger')
+    return redirect(url_for('main.inventory'))
+
 @main.route('/dashboard')
 @login_required
 def index():
