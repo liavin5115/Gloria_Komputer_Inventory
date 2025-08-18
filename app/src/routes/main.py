@@ -69,15 +69,25 @@ def save_schedule_time(time_str):
 def landing():
     # Get featured products (those with stock > 0)
     featured_products = Inventory.query.filter(Inventory.quantity > 0).all()
-    
+    # Get all products
+    all_products = Inventory.query.all()
     # Get unique categories
     categories = db.session.query(Inventory.category).distinct().all()
     categories = [cat[0] for cat in categories]
-    
-    return render_template('landing.html', 
-                         products=featured_products,
-                         categories=categories,
-                         get_jakarta_time=get_jakarta_time)
+    # Example testimonials (static, or you can fetch from DB if available)
+    testimonials = [
+        {"name": "Andi S.", "review": "Great service and fast delivery! My laptop arrived in perfect condition.", "rating": 5},
+        {"name": "Maria T.", "review": "Customer support was very helpful. Highly recommended!", "rating": 5},
+        {"name": "Budi P.", "review": "Best prices and quality products. Will shop again!", "rating": 4},
+    ]
+    return render_template(
+        'landing.html',
+        featured_products=featured_products,
+        all_products=all_products,
+        categories=categories,
+        testimonials=testimonials,
+        get_jakarta_time=get_jakarta_time
+    )
 
 # --- Route for testing the new landing page design ---
 @main.route('/test-landing')
