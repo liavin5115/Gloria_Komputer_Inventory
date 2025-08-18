@@ -83,7 +83,8 @@ def landing():
     return render_template(
         'landing.html',
         featured_products=featured_products,
-        all_products=all_products,
+    all_products=all_products,
+    products=all_products,
         categories=categories,
         testimonials=testimonials,
         get_jakarta_time=get_jakarta_time
