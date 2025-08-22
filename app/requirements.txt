@@ -1,9 +1,23 @@
+# Web Framework and Extensions
 Flask==3.0.0
 Flask-SQLAlchemy==3.0.2
 Flask-Migrate==4.0.5
-python-dotenv==1.0.0
-Werkzeug==3.0.1
-pytz==2024.1
-gunicorn==21.2.0
-SQLAlchemy==1.4.50
 Flask-Login==0.6.3
+Werkzeug==3.0.1
+
+# Database
+SQLAlchemy==1.4.50
+
+# Deployment
+gunicorn==21.2.0
+
+# Utils
+python-dotenv==1.0.0
+pytz==2024.1
+Pillow==10.1.0  # For image processing
+requests==2.31.0  # For HTTP requests
+python-dateutil==2.8.2  # For date handling
+WTForms==3.1.1  # For form validation
+email-validator==2.1.0.post1  # For email validation
+pytest==7.4.3  # For testing
+coverage==7.3.2  # For test coverage
