@@ -1,14 +1,18 @@
 from flask_login import UserMixin
-from app.src import db
+from app.src import db, get_jakarta_time
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     name = db.Column(db.String(100))
     password_hash = db.Column(db.String(200))
-    role = db.Column(db.String(20), default='user')  # admin or user
+    role = db.Column(db.String(20), default='user')  # owner, admin, or user
     is_active = db.Column(db.Boolean, default=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    notes = db.Column(db.Text)  # For storing employee information or notes
     
     @staticmethod
     def validate_password(password):
@@ -70,5 +74,28 @@ class User(UserMixin, db.Model):
             db.session.rollback()
             return None, f'Terjadi kesalahan saat registrasi: {str(e)}'
     
+    @property
+    def is_owner(self):
+        """Check if user is owner (super admin)"""
+        return self.role == 'owner'
+
+    @property
+    def is_admin(self):
+        """Check if user is admin"""
+        return self.role == 'admin' or self.role == 'owner'
+    
+    @classmethod
+    def create_admin(cls, username, name, password, created_by_id, notes=None):
+        """Create a new admin user"""
+        user = cls(
+            username=username,
+            name=name,
+            role='admin',
+            created_by=created_by_id,
+            notes=notes
+        )
+        user.set_password(password)
+        return user
+
     def __repr__(self):
         return f'<User {self.username}>'

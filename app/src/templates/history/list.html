@@ -21,7 +21,7 @@
 
 <!-- Filter Section -->
 <div id="filterSection" class="collapse show mb-4">
-    <div class="card bg-dark border fade-in">
+    <div class="data-card fade-in">
         <div class="card-body">
             <form method="GET" class="row g-3">
                 <div class="col-md-3">
@@ -124,10 +124,10 @@
 </div>
 
 <!-- History Table -->
-<div class="card bg-dark border hover-shadow fade-in">
-    <div class="card-body">
+<div class="data-card hover-shadow fade-in">
+    <div class="table-container">
         <div class="table-responsive">
-            <table id="historyTable" class="table table-hover">
+            <table id="historyTable" class="table table-dark table-hover">
                 <thead>
                     <tr>
                         <th>Tanggal</th>
@@ -232,7 +232,7 @@
 $(document).ready(function() {
     // Initialize DataTable
     $('#historyTable').DataTable({
-        dom: 'Bfrtip',
+        dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>rtip',
         buttons: [
             {
                 extend: 'excel',

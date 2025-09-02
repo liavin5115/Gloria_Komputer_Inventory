@@ -18,14 +18,12 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 # Copy project files
 COPY . .
 
-# Create /data directory for persistent storage (Railway best practice)
-RUN mkdir -p /data
+# Create directory for database
+RUN mkdir -p /app/instance
 
-# Expose port 5000
-EXPOSE 5000
-
-# Set environment variable for database path (Railway will mount /data)
-ENV DATABASE_URL=/data/inventory.db
+# Set environment variables for Cloud Run
+ENV PORT=8080
+ENV DATABASE_URL=/app/instance/inventory.db
 
 # Start the app with Gunicorn
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "wsgi:app"]
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 wsgi:app

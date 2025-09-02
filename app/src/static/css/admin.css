@@ -1,0 +1,411 @@
+/* Modern Admin Theme Colors */
+:root {
+  --primary: #3b82f6;
+  --secondary: #6b7280;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #0ea5e9;
+  
+  /* Surface Colors */
+  --background: #111827;
+  --surface: #1f2937;
+  --surface-light: #374151;
+  --surface-hover: #2d3748;
+  
+  /* Text Colors */
+  --text: #f9fafb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  
+  /* Border & Accent */
+  --border: #374151;
+  --border-light: #4b5563;
+  
+  /* Component Colors */
+  --primary-light: rgba(59, 130, 246, 0.1);
+  --success-light: rgba(16, 185, 129, 0.1);
+  --warning-light: rgba(245, 158, 11, 0.1);
+  --danger-light: rgba(239, 68, 68, 0.1);
+  --info-light: rgba(14, 165, 233, 0.1);
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Cards and Layouts */
+.data-card, .stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+}
+
+.data-card:hover, .stat-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-card .card-body {
+  padding: 1.25rem;
+}
+
+.stat-card .card-title {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.stat-card .stat-value {
+  color: var(--text);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.stat-card.primary .icon-wrapper {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--admin-primary);
+}
+
+.stat-card.success .icon-wrapper {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--admin-success);
+}
+
+.stat-card.warning .icon-wrapper {
+  background: rgba(245, 158, 11, 0.1);
+  color: var(--admin-warning);
+}
+
+.stat-card.danger .icon-wrapper {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--admin-danger);
+}
+
+/* Tables */
+.table-dark {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+  margin: 0;
+}
+
+.table-dark thead {
+  background: var(--surface-light);
+}
+
+.table-dark thead th {
+  padding: 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-light);
+  white-space: nowrap;
+  text-align: left;
+}
+
+.table-dark tbody tr {
+  transition: all 0.2s ease;
+}
+
+.table-dark tbody tr:hover {
+  background: var(--surface-hover);
+}
+
+.table-dark td {
+  padding: 1rem;
+  color: var(--text);
+  border-color: var(--border);
+  vertical-align: middle;
+}
+
+/* Table column styles */
+.table-dark td,
+.table-dark th {
+  text-align: left;
+}
+
+.table-dark td:nth-child(4),
+.table-dark td:nth-child(5),
+.table-dark td:nth-child(6),
+.table-dark td:nth-child(7) {
+  text-align: right;
+}
+
+/* Make sure profit margin is prominent */
+.table-dark td:nth-child(7) {
+  font-weight: 600;
+  color: var(--success);
+}
+
+/* Action buttons container */
+.btn-group {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+}
+
+/* Individual action buttons */
+.btn-group .btn {
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+}
+
+/* Make sure icons in buttons are visible */
+.btn-group .btn i {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Ensure the actions column doesn't wrap */
+.table-dark td:last-child {
+  white-space: nowrap;
+  width: 1%;
+}
+
+/* Table Container */
+.table-container {
+  padding: 1.5rem;
+  border-radius: 12px;
+}
+
+.table-responsive {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Action Buttons */
+.btn-action {
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+}
+
+/* Outline button styles */
+.btn-outline-primary {
+  background: transparent;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+  background: var(--primary);
+  color: var(--text);
+}
+
+.btn-outline-success {
+  background: transparent;
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+
+.btn-outline-success:hover {
+  background: var(--success);
+  color: var(--text);
+}
+
+.btn-outline-danger {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+.btn-outline-danger:hover {
+  background: var(--danger);
+  color: var(--text);
+}
+
+/* Charts */
+.chart-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.chart-card:hover {
+  border-color: var(--admin-primary);
+}
+
+/* Badges and Status Indicators */
+.badge {
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+  font-weight: 600;
+  border-radius: 6px;
+}
+
+.badge-success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.badge-warning {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.badge-danger {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+.badge-info {
+  background: var(--info-light);
+  color: var(--info);
+}
+
+/* Progress Bars */
+.progress {
+  background-color: var(--surface-light);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  background-color: var(--primary);
+  transition: width 0.3s ease;
+}
+
+/* Filter Section */
+.filter-card {
+  background: linear-gradient(145deg, #1e1e2d, #2d2d3f);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+}
+
+/* Animation Effects */
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Buttons and Actions */
+.btn {
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+/* Primary Buttons */
+.btn-primary {
+  background: var(--primary);
+  border: none;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+  background: transparent;
+  border: 1px solid var(--primary);
+  color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Success Buttons */
+.btn-success {
+  background: var(--success);
+  border: none;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.btn-outline-success {
+  background: transparent;
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+
+.btn-outline-success:hover {
+  background: var(--success);
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Danger Buttons */
+.btn-outline-danger {
+  background: transparent;
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+.btn-outline-danger:hover {
+  background: var(--danger);
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Small Button Variations */
+.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+/* Charts */
+canvas {
+  max-width: 100%;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-light);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}

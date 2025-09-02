@@ -1,0 +1,6 @@
+tunnel: gloria-komputer
+credentials-file: C:\Users\WINDOWS10\.cloudflared\83efc748-2fb9-494b-a307-ef668ff725bd.json
+ingress:
+  - hostname: isyo.my.id
+    service: http://localhost:5000
+  - service: http_status:404

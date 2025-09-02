@@ -38,7 +38,7 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-striped mb-0">
+                <table id="backupTable" class="table table-striped mb-0">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -69,4 +69,50 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+$(document).ready(function() {
+    $('#backupTable').DataTable({
+        dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>rtip',
+        buttons: [{
+            extend: 'collection',
+            text: '<i class="bi bi-download me-2"></i>Export',
+            className: 'btn btn-primary',
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="bi bi-file-earmark-excel me-2"></i>Excel',
+                    className: 'btn btn-success'
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="bi bi-file-earmark-pdf me-2"></i>PDF',
+                    className: 'btn btn-danger'
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="bi bi-printer me-2"></i>Print',
+                    className: 'btn btn-info'
+                }
+            ]
+        }],
+        pageLength: 10,
+        order: [[2, 'desc']], // Sort by backup date
+        language: {
+            search: "Search:",
+            lengthMenu: "Show _MENU_ entries",
+            info: "Showing _START_ to _END_ of _TOTAL_ entries",
+            paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+            }
+        }
+    });
+});
+</script>
 {% endblock %}

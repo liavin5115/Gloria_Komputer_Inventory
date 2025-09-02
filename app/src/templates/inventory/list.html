@@ -35,11 +35,11 @@
 </div>
 
 <!-- Filter Section -->
-<div class="card mb-4 fade-in">
+<div class="data-card mb-4 fade-in">
     <div class="card-body">
         <div class="row g-3">
             <div class="col-md-3">
-                <label class="form-label">Category</label>
+                <label class="form-label text-primary fw-bold">Category</label>
                 <select id="categoryFilter" class="form-select">
                     <option value="">All Categories</option>
                     {% for category in categories %}
@@ -75,19 +75,20 @@
     </div>
 </div>
 
-<div class="card hover-shadow fade-in">
-    <div class="card-body">
+<div class="data-card hover-shadow fade-in">
+    <div class="table-container">
         <div class="table-responsive">
-            <table id="inventoryTable" class="table table-hover align-middle mb-0 w-100">
-                <thead>
-                    <tr>                        <th>Product Name</th>
-                        <th>Category</th>
-                        <th>Description</th>
-                        <th>Quantity</th>
-                        <th>Purchase Price</th>
-                        <th>Selling Price</th>
-                        <th>Profit Margin</th>
-                        <th>Actions</th>
+            <table id="inventoryTable" class="table table-dark table-hover align-middle mb-0 w-100">
+                <thead class="text-white">
+                    <tr>
+                        <th style="width: 20%">Product Name</th>
+                        <th style="width: 10%">Category</th>
+                        <th style="width: 20%">Description</th>
+                        <th style="width: 10%">Quantity</th>
+                        <th style="width: 12%">Purchase Price</th>
+                        <th style="width: 12%">Selling Price</th>
+                        <th style="width: 8%">Profit</th>
+                        <th style="min-width: 130px; width: 8%">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -265,9 +266,17 @@
 $(document).ready(function() {
     // Initialize DataTable with configuration
     var table = $('#inventoryTable').DataTable({
-        processing: true,
-        pageLength: 10,
         dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>rtip',
+        columns: [
+            { name: 'product_name', data: 0 },
+            { name: 'category', data: 1 },
+            { name: 'description', data: 2 },
+            { name: 'quantity', data: 3 },
+            { name: 'purchase_price', data: 4 },
+            { name: 'selling_price', data: 5 },
+            { name: 'profit_margin', data: 6 },
+            { name: 'actions', data: 7, orderable: false, searchable: false }
+        ],
         buttons: [
             {
                 extend: 'collection',
@@ -275,40 +284,23 @@ $(document).ready(function() {
                 className: 'btn btn-primary',
                 buttons: [
                     {
-                        extend: 'copy',
-                        text: '<i class="bi bi-clipboard me-2"></i>Copy',
-                        className: 'btn btn-light'
-                    },
-                    {
                         extend: 'excel',
-                        text: '<i class="bi bi-file-earmark-excel me-2"></i>Excel',
+                        text: '<i class="bi bi-file-earmark-excel me-1"></i>Excel',
                         className: 'btn btn-success'
                     },
                     {
                         extend: 'pdf',
-                        text: '<i class="bi bi-file-earmark-pdf me-2"></i>PDF',
+                        text: '<i class="bi bi-file-earmark-pdf me-1"></i>PDF', 
                         className: 'btn btn-danger'
-                    },
-                    {
-                        extend: 'print',
-                        text: '<i class="bi bi-printer me-2"></i>Print',
-                        className: 'btn btn-info'
                     }
                 ]
             }
         ],
-        order: [[0, 'asc']],
         responsive: true,
-        language: {
-            search: "Search:",
-            lengthMenu: "Show _MENU_ entries",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
+        pageLength: 10,
+        order: [[0, 'desc']],
+        rowCallback: function(row, data) {
+            $(row).addClass('fade-in-up');
         }
     });
 

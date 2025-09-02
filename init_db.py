@@ -17,17 +17,17 @@ def init_db():
             db.create_all()
             logger.info("Database tables created successfully")
             
-            # Add admin user if no users exist
+            # Add owner (super admin) user if no users exist
             if not User.query.first():
-                admin = User(
-                    username='admin',
-                    name='Administrator',
-                    role='admin'
+                owner = User(
+                    username='owner',
+                    name='System Owner',
+                    role='owner'
                 )
-                admin.password_hash = generate_password_hash('admin123')  # Change this password in production
-                db.session.add(admin)
+                owner.set_password('Owner@123')  # Remember to change this password after first login
+                db.session.add(owner)
                 db.session.commit()
-                logger.info("Admin user created successfully")
+                logger.info("Created initial owner account (username: owner, password: Owner@123)")
             
             return True
                 

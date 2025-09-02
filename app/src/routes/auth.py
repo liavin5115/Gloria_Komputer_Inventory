@@ -60,42 +60,63 @@ def profile():
     
     return render_template('auth/profile.html')
 
-@auth.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
+@auth.route('/admin/manage', methods=['GET', 'POST'])
+@login_required
+def manage_admins():
+    """Manage admin accounts (owner only)"""
+    if not current_user.role == 'owner':
+        flash('Only the owner can access this page.', 'danger')
         return redirect(url_for('main.index'))
     
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        name = request.form.get('name')
-        
-        if not all([username, password, confirm_password]):
-            flash('Semua field harus diisi', 'danger')
-            return redirect(url_for('auth.register'))
+        action = request.form.get('action')
+        if action == 'create':
+            username = request.form.get('username')
+            name = request.form.get('name')
+            password = request.form.get('password')
+            notes = request.form.get('notes')
             
-        if password != confirm_password:
-            flash('Password tidak cocok', 'danger')
-            return redirect(url_for('auth.register'))
+            if User.query.filter_by(username=username).first():
+                flash('Username sudah digunakan.', 'danger')
+            else:
+                try:
+                    # First validate password
+                    is_valid, error = User.validate_password(password)
+                    if not is_valid:
+                        flash(error, 'danger')
+                        return redirect(url_for('auth.manage_admins'))
+
+                    new_admin = User(
+                        username=username,
+                        name=name,
+                        role='admin',
+                        created_by=current_user.id,
+                        notes=notes
+                    )
+                    new_admin.set_password(password)
+                    db.session.add(new_admin)
+                    db.session.commit()
+                    flash(f'Akun admin berhasil dibuat untuk {name}', 'success')
+                except ValueError as e:
+                    flash(str(e), 'danger')
+                    return redirect(url_for('auth.manage_admins'))
         
-        # First validate password strength
-        is_valid, error = User.validate_password(password)
-        if not is_valid:
-            flash(error, 'danger')
-            return redirect(url_for('auth.register'))
-            
-        user, error = User.register(
-            username=username,
-            password=password,
-            name=name
-        )
-        
-        if error:
-            flash(error, 'danger')
-            return redirect(url_for('auth.register'))
-            
-        flash('Registrasi berhasil! Silakan login', 'success')
-        return redirect(url_for('auth.login'))
+        elif action == 'delete':
+            user_id = request.form.get('user_id')
+            user = User.query.get_or_404(user_id)
+            if user.role == 'owner':
+                flash('Cannot delete owner account.', 'danger')
+            else:
+                db.session.delete(user)
+                db.session.commit()
+                flash(f'Admin account {user.name} has been deleted', 'success')
     
-    return render_template('auth/register.html')
+    # Get all admin users
+    admins = User.query.filter(User.role != 'user').order_by(User.created_at.desc()).all()
+    return render_template('auth/manage_admins.html', admins=admins)
+
+@auth.route('/register', methods=['GET', 'POST'])
+def register():
+    # Redirect to login page with a message
+    flash('Pendaftaran hanya dapat dilakukan oleh owner/admin', 'warning')
+    return redirect(url_for('auth.login'))

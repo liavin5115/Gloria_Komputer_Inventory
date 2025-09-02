@@ -221,6 +221,41 @@ def index():
     # Get recent activities
     recent_activities = StockHistory.query.order_by(StockHistory.date.desc()).limit(5).all()
     
+    # Get category distribution data
+    category_data = db.session.query(
+        Inventory.category,
+        func.count(Inventory.id).label('count')
+    ).group_by(Inventory.category).all()
+    
+    category_labels = [item[0] or 'Uncategorized' for item in category_data]
+    category_counts = [item[1] for item in category_data]
+    
+    # Get sales data for the last 6 months
+    end_date = get_jakarta_time().date()
+    start_date = end_date.replace(day=1)
+    start_date = start_date.replace(month=start_date.month - 5)  # Go back 6 months
+    
+    sales_data = db.session.query(
+        func.strftime('%Y-%m', StockHistory.date).label('month'),
+        func.sum(StockHistory.quantity * StockHistory.selling_price).label('sales'),
+        func.sum((StockHistory.selling_price - StockHistory.purchase_price) * StockHistory.quantity).label('profit')
+    ).filter(
+        StockHistory.type == 'out',
+        StockHistory.date >= start_date,
+        StockHistory.date <= end_date
+    ).group_by('month').order_by('month').all()
+    
+    # Format data for charts
+    months_labels = []
+    sales_values = []
+    profit_values = []
+    
+    for month_data in sales_data:
+        month_str = datetime.strptime(month_data[0], '%Y-%m').strftime('%b %Y')
+        months_labels.append(month_str)
+        sales_values.append(float(month_data[1] or 0))
+        profit_values.append(float(month_data[2] or 0))
+    
     return render_template('index.html',
                          total_products=total_products,
                          low_stock=low_stock,
@@ -230,7 +265,13 @@ def index():
                          total_inventory_value=total_inventory_value,
                          daily_sales=daily_sales,
                          monthly_sales=monthly_sales,
-                         recent_activities=recent_activities)
+                         recent_activities=recent_activities,
+                         # Chart data
+                         category_labels=category_labels,
+                         category_counts=category_counts,
+                         months_labels=months_labels,
+                         sales_values=sales_values,
+                         profit_values=profit_values)
 
 @main.route('/inventory')
 @login_required

@@ -43,11 +43,11 @@
     </div>
 </div>
 
-<div class="card">
-    <div class="card-header">
+<div class="data-card">
+    <div class="card-header bg-dark">
         <ul class="nav nav-tabs card-header-tabs">
             <li class="nav-item">
-                <a class="nav-link active" href="#pending" data-bs-toggle="tab">
+                <a class="nav-link active text-primary" href="#pending" data-bs-toggle="tab">
                     <i class="bi bi-hourglass-split"></i> Pending
                 </a>
             </li>
@@ -67,8 +67,8 @@
         <div class="tab-content">
             <div class="tab-pane fade show active" id="pending">
                 <div class="table-responsive">
-                    <table id="pendingTable" class="table table-hover">
-                        <thead>
+                    <table id="pendingTable" class="table table-dark table-hover">
+                        <thead class="text-white">
                             <tr>
                                 <th>Product Name</th>
                                 <th>Supplier</th>
@@ -126,8 +126,8 @@
             
             <div class="tab-pane fade" id="completed">
                 <div class="table-responsive">
-                    <table id="completedTable" class="table table-hover">
-                        <thead>
+                    <table id="completedTable" class="table table-dark table-hover">
+                        <thead class="text-white">
                             <tr>
                                 <th>Product Name</th>
                                 <th>Supplier</th>
@@ -160,8 +160,8 @@
             
             <div class="tab-pane fade" id="cancelled">
                 <div class="table-responsive">
-                    <table id="cancelledTable" class="table table-hover">
-                        <thead>
+                    <table id="cancelledTable" class="table table-dark table-hover">
+                        <thead class="text-white">
                             <tr>
                                 <th>Product Name</th>
                                 <th>Supplier</th>
@@ -253,7 +253,28 @@ $(document).ready(function() {
                 extend: 'collection',
                 text: '<i class="bi bi-download me-2"></i>Export',
                 className: 'btn btn-primary',
-                buttons: ['copy', 'excel', 'pdf', 'print']
+                buttons: [
+                    {
+                        extend: 'copy',
+                        text: '<i class="bi bi-clipboard me-2"></i>Copy',
+                        className: 'btn btn-light'
+                    },
+                    {
+                        extend: 'excel',
+                        text: '<i class="bi bi-file-earmark-excel me-2"></i>Excel',
+                        className: 'btn btn-success'
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="bi bi-file-earmark-pdf me-2"></i>PDF',
+                        className: 'btn btn-danger'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="bi bi-printer me-2"></i>Print',
+                        className: 'btn btn-info'
+                    }
+                ]
             }
         ],
         order: [[4, 'desc']], // Sort by Received Date
@@ -267,7 +288,28 @@ $(document).ready(function() {
                 extend: 'collection',
                 text: '<i class="bi bi-download me-2"></i>Export',
                 className: 'btn btn-primary',
-                buttons: ['copy', 'excel', 'pdf', 'print']
+                buttons: [
+                    {
+                        extend: 'copy',
+                        text: '<i class="bi bi-clipboard me-2"></i>Copy',
+                        className: 'btn btn-light'
+                    },
+                    {
+                        extend: 'excel',
+                        text: '<i class="bi bi-file-earmark-excel me-2"></i>Excel',
+                        className: 'btn btn-success'
+                    },
+                    {
+                        extend: 'pdf',
+                        text: '<i class="bi bi-file-earmark-pdf me-2"></i>PDF',
+                        className: 'btn btn-danger'
+                    },
+                    {
+                        extend: 'print',
+                        text: '<i class="bi bi-printer me-2"></i>Print',
+                        className: 'btn btn-info'
+                    }
+                ]
             }
         ],
         order: [[4, 'desc']], // Sort by Cancelled Date

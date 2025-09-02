@@ -21,6 +21,20 @@
     --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
+/* Base styles for proper content display */
+html, body {
+    min-height: 100%;
+    width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+}
+
 /* Hero Section */
 .hero-section {
     position: relative;
@@ -28,6 +42,8 @@
     background: linear-gradient(135deg, var(--color-background), var(--color-surface));
     overflow: hidden;
     margin-top: -1rem;
+    width: 100%;
+    z-index: 1;
 }
 
 .hero-wrapper {
@@ -113,7 +129,21 @@
     padding: 6rem 0;
     background: linear-gradient(180deg, var(--color-background), var(--color-surface));
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    width: 100%;
+    display: block;
+    min-height: auto;
+    z-index: 1;
+}
+
+.category-section .container {
+    position: relative;
+    z-index: 2;
+    display: block;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
 }
 
 .category-section::before {
@@ -125,6 +155,7 @@
     bottom: 0;
     background: radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.1), transparent 60%);
     pointer-events: none;
+    z-index: -1;
 }
 
 .section-header {
@@ -154,6 +185,13 @@
     opacity: 0.9;
 }
 
+.category-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -1rem;
+    width: 100%;
+}
+
 .category-card {
     background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.7));
     border: 1px solid var(--color-border);
@@ -163,6 +201,11 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     backdrop-filter: blur(10px);
     text-align: center;
+    display: block;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative;
+    z-index: 2;
 }
 
 .category-card:hover {
@@ -447,6 +490,15 @@
     box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
 }
 
+    /* Fix for category cards on different screen sizes */
+.category-section .col-md-3 {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: transform 0.3s ease;
+    display: block;
+    visibility: visible !important;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     .hero-content {
@@ -455,11 +507,14 @@
     
     .category-section {
         padding: 4rem 0;
+        min-height: auto;
     }
     
     .category-card {
         padding: 2rem 1.5rem;
         margin-bottom: 1rem;
+        opacity: 1 !important;
+        transform: none !important;
     }
     
     .cta-wrapper {
@@ -482,7 +537,14 @@
     }
 }
 
-@media (max-width: 576px) {
+/* Force visibility for sections */
+.category-section,
+.product-highlights-section,
+.cta-section {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: none !important;
+}@media (max-width: 576px) {
     .hero-title {
         font-size: 2.5rem;
     }
